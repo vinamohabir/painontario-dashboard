@@ -1304,3 +1304,1020 @@ label[for="res-sort"] {
   s.textContent = css;
   document.head.appendChild(s);
 }();
+
+
+/* ============================================================
+   AUDIT-DRIVEN PATCHES BUNDLE (2026-05-05 v1)
+   Consolidated from 4 audit subagents:
+   - patch_jobs_home_v1   (kicker, equity v2 watcher, ED banner suppress, card-eyebrow, font check)
+   - patch_advocacy_byaudience_v1 (breadcrumb, dark gaps, full layout, URLSearchParams reader)
+   - patch_resources_contact_v1 (DOM stubs, fieldset, Enter handler, label binding, GET→POST, dropdown polish, dark form widgets, restored feedback link)
+   - patch_portal_v1 (a11y, leak prevention, Forms tile activator)
+   ============================================================ */
+/* ============================================================
+   patch_jobs_home_v1.js
+   2026-05-05 — appends to site.js after kicker-link-v1, jobsequity v2,
+   po-ed-banner, and homenewsfixfinal blocks.
+   Each IIFE is path-gated and idempotent (data-po marker + early return).
+   Plain ES2015 only (no optional chaining, nullish coalescing, async/await).
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Block 1 — kicker "Open roles" → /about/jobs#po-apply
+   ------------------------------------------------------------
+   Fixes site.js KICKER_LINKS pointing at #open-roles (no element
+   exists) — should target #po-apply (the apply H2 set by footer
+   block 08). Also: when current path already starts with
+   /about/jobs, scroll smoothly to the #po-apply section instead
+   of full navigation, and skip wiring entirely if dest path ===
+   current path AND there's no hash to scroll to.
+   Runs site-wide (no path gate) so it patches every kicker.
+   ------------------------------------------------------------ */
+(function () {
+  if (document.querySelector('style[data-po="kicker-link-fix-v1"]')) return;
+  var marker = document.createElement('style');
+  marker.setAttribute('data-po', 'kicker-link-fix-v1');
+  marker.textContent = '/* kicker-link-fix-v1 active */';
+  document.head.appendChild(marker);
+
+  var FIX_MAP = {
+    'open roles': '/about/jobs#po-apply',
+    'open role':  '/about/jobs#po-apply'
+  };
+
+  function curPath() {
+    return (location.pathname || '/').replace(/\/+$/, '') || '/';
+  }
+
+  function rewireOne(k) {
+    if (k.dataset.poKickerFixed === '1') return;
+    var t = (k.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    var dest = FIX_MAP[t];
+    if (!dest) return;
+
+    /* Parse dest into path + hash */
+    var hashIdx = dest.indexOf('#');
+    var destPath = hashIdx === -1 ? dest : dest.slice(0, hashIdx);
+    var destHash = hashIdx === -1 ? '' : dest.slice(hashIdx);
+    var samePath = curPath() === destPath.replace(/\/+$/, '');
+
+    /* Self-skip: already at destination AND no hash to scroll to */
+    if (samePath && !destHash) {
+      k.removeAttribute('data-po-link');
+      k.removeAttribute('role');
+      k.removeAttribute('tabindex');
+      k.style.cursor = '';
+      k.dataset.poKickerFixed = '1';
+      return;
+    }
+
+    /* Override the existing click + keydown by cloning the node
+       (drops all bound listeners installed by kicker-link-v1) and
+       re-wiring with the corrected destination. */
+    var clone = k.cloneNode(true);
+    clone.setAttribute('data-po-link', '');
+    clone.setAttribute('role', 'link');
+    clone.setAttribute('tabindex', '0');
+    clone.style.cursor = 'pointer';
+    clone.dataset.poKickerFixed = '1';
+
+    function go(e) {
+      if (e && e.target && e.target.closest && e.target.closest('a')) return;
+      if (samePath && destHash) {
+        /* Smooth-scroll on same page rather than reloading. */
+        var target = document.querySelector(destHash);
+        if (target) {
+          if (e && e.preventDefault) e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (history && history.replaceState) {
+            history.replaceState(null, '', destHash);
+          }
+          return;
+        }
+      }
+      location.href = dest;
+    }
+    clone.addEventListener('click', go);
+    clone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        go(e);
+      }
+    });
+    if (k.parentNode) k.parentNode.replaceChild(clone, k);
+  }
+
+  function sweep() {
+    var nodes = document.querySelectorAll('.kicker, .po-kicker');
+    Array.prototype.forEach.call(nodes, rewireOne);
+  }
+  sweep();
+  /* Catch later kicker-link-v1 wiring passes at 250/800/2000ms */
+  [300, 900, 2100, 4000].forEach(function (ms) { setTimeout(sweep, ms); });
+
+  if (window.MutationObserver) {
+    var t = null;
+    var mo = new MutationObserver(function () {
+      if (t) return;
+      t = setTimeout(function () { t = null; sweep(); }, 200);
+    });
+    mo.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
+  }
+})();
+
+/* ------------------------------------------------------------
+   Block 2 — equity-band v2 dataset guard (/about/jobs only)
+   ------------------------------------------------------------
+   The legacy footer-block-08 build script (still loaded in v3
+   ADDONS bundle / live_extract/role_card_script_21.js) re-fires
+   injectEq at 300/800/1500/3000 ms with the OLD copy ("Whose
+   voices we want at the table"). jobsequityandpillrestylev2
+   stamps dataset.v='2' and the new copy ("Who we want to hear
+   from") at 200/500/1000/2000/4000 ms — but block 08 has no
+   dataset.v guard, so it clobbers v2 between v2's ticks.
+   Fix: run our own watcher on the same cadence as block 08,
+   re-applying v2 HTML and stamping dataset.v='2' whenever we
+   find an .po-jbs-eq node lacking the v=2 marker.
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/about\/jobs(\/|$)/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="jobs-eq-v2-watcher"]')) return;
+  var marker = document.createElement('style');
+  marker.setAttribute('data-po', 'jobs-eq-v2-watcher');
+  marker.textContent = '/* jobs-eq-v2-watcher active */';
+  document.head.appendChild(marker);
+
+  var V2_HTML =
+    '<h3>Who we want to hear from</h3>' +
+    '<p>We\'re especially looking for applications from people with lived and living experience of chronic pain, Indigenous Peoples, Black and other racialized candidates, 2SLGBTQ+ candidates, Disabled candidates, and people from working-class and rural communities.</p>' +
+    '<p>If you need an accommodation at any stage, write to <a href="mailto:info@painontario.ca">info@painontario.ca</a> and we\'ll arrange it. You don\'t need to disclose a reason.</p>';
+
+  function enforce() {
+    var eq = document.querySelector('.po-jbs-eq');
+    if (!eq) return false;
+    if (eq.dataset.v === '2') return false;
+    eq.innerHTML = V2_HTML;
+    eq.dataset.v = '2';
+    return true;
+  }
+
+  enforce();
+  /* Tick alongside the legacy block-08 timers + a couple after
+     to cover any delayed mutations. */
+  [150, 350, 600, 900, 1100, 1700, 2200, 3100, 3500, 5000, 7500].forEach(function (ms) {
+    setTimeout(enforce, ms);
+  });
+
+  /* Belt-and-braces: observe .po-jbs-eq for content swaps. */
+  if (window.MutationObserver) {
+    var debounce = null;
+    var mo = new MutationObserver(function () {
+      if (debounce) return;
+      debounce = setTimeout(function () { debounce = null; enforce(); }, 60);
+    });
+    /* Wait for the node to exist, then attach. */
+    var tries = 0;
+    var iv = setInterval(function () {
+      var eq = document.querySelector('.po-jbs-eq');
+      if (eq) {
+        mo.observe(eq, { childList: true, subtree: true, characterData: true });
+        clearInterval(iv);
+      } else if (++tries > 60) {
+        clearInterval(iv);
+      }
+    }, 150);
+  }
+})();
+
+/* ------------------------------------------------------------
+   Block 3 — suppress ED hiring banner on /about/jobs
+   ------------------------------------------------------------
+   site.js v21 builds .po-ed-banner site-wide ("We're hiring our
+   founding Executive Director · apply by May 22 →"). On the
+   jobs page itself this duplicates the role card and pushes the
+   nav down. Hide-and-remove any .po-ed-banner that lands on
+   /about/jobs. Also persist the dismissal so the v21 mount()
+   guard short-circuits on subsequent renders within this tab.
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/about\/jobs(\/|$)/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="jobs-ed-banner-suppress"]')) return;
+
+  /* CSS belt: hide instantly if it paints before our JS runs. */
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'jobs-ed-banner-suppress');
+  s.textContent = '.po-ed-banner{display:none!important}.po-ed-banner ~ .navbar,.po-ed-banner ~ * .navbar{top:0!important}';
+  document.head.appendChild(s);
+
+  function strip() {
+    var nodes = document.querySelectorAll('.po-ed-banner');
+    Array.prototype.forEach.call(nodes, function (n) {
+      if (n && n.parentNode) n.parentNode.removeChild(n);
+    });
+  }
+  strip();
+  [50, 200, 500, 1500, 3000].forEach(function (ms) { setTimeout(strip, ms); });
+
+  if (window.MutationObserver) {
+    var t = null;
+    var mo = new MutationObserver(function () {
+      if (t) return;
+      t = setTimeout(function () { t = null; strip(); }, 80);
+    });
+    mo.observe(document.body, { childList: true, subtree: false });
+  }
+})();
+
+/* ------------------------------------------------------------
+   Block 4 — homepage .card-eyebrow date styling
+   ------------------------------------------------------------
+   News CMS cards render <div class="card-eyebrow">May 5, 2026</div>
+   but the inline CSS at site.js block 5 only targets
+   .news-item a > .date. Mirror that .date style onto
+   .card-eyebrow (matching values: 0.72rem Inter Tight, 0.16em
+   letter-spacing, uppercase, weight 600, sky-midnight 78% alpha)
+   plus a dark-mode tweak so it stays legible on #171d2c.
+   ------------------------------------------------------------ */
+(function () {
+  if (!(location.pathname === '/' || /^\/index\b/i.test(location.pathname))) return;
+  if (document.querySelector('style[data-po="card-eyebrow-fix-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'card-eyebrow-fix-v1');
+  s.textContent = [
+    'html body section .news-item .card-eyebrow,',
+    'html body section .news-item a .card-eyebrow,',
+    'html body section .news-item a > .card-eyebrow{',
+    'display:inline-block!important;',
+    'font-family:"Inter Tight",sans-serif!important;',
+    'font-size:0.72rem!important;',
+    'letter-spacing:0.16em!important;',
+    'text-transform:uppercase!important;',
+    'color:rgba(23,87,106,0.78)!important;',
+    'font-weight:600!important;',
+    'margin:0 0 4px!important;',
+    'opacity:1!important',
+    '}',
+    'html[data-theme="dark"] body section .news-item .card-eyebrow,',
+    'html[data-theme="dark"] body section .news-item a .card-eyebrow{',
+    'color:#cdc4ad!important',
+    '}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+/* ------------------------------------------------------------
+   Block 5 — homepage Fraunces + Inter Tight font load (no-op
+   guard if either family already resolves in computed style)
+   ------------------------------------------------------------
+   Audit flagged that WebFont.load only fetches Open Sans +
+   Montserrat, with no Google Fonts <link> for the brand stack.
+   Many builds DO render Fraunces/Inter Tight via inline
+   @font-face in the head CSS, so we only inject the Google
+   Fonts stylesheet when document.fonts.check() reports neither
+   family is available. Idempotent + path-gated to /.
+   ------------------------------------------------------------ */
+(function () {
+  if (!(location.pathname === '/' || /^\/index\b/i.test(location.pathname))) return;
+  if (document.querySelector('link[data-po="brand-fonts-v1"]')) return;
+  if (document.querySelector('style[data-po="brand-fonts-v1-checked"]')) return;
+
+  function hasFamily(family) {
+    try {
+      if (document.fonts && typeof document.fonts.check === 'function') {
+        return document.fonts.check('1rem "' + family + '"');
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function ensure() {
+    var hasFraunces = hasFamily('Fraunces');
+    var hasInterTight = hasFamily('Inter Tight');
+
+    /* Mark that we've evaluated, regardless of action taken. */
+    var sentinel = document.createElement('style');
+    sentinel.setAttribute('data-po', 'brand-fonts-v1-checked');
+    sentinel.textContent = '/* brand-fonts-v1 evaluated: fraunces=' + hasFraunces + ' interTight=' + hasInterTight + ' */';
+    document.head.appendChild(sentinel);
+
+    if (hasFraunces && hasInterTight) return;
+
+    /* Preconnect for faster handshake. */
+    var pc1 = document.createElement('link');
+    pc1.rel = 'preconnect';
+    pc1.href = 'https://fonts.googleapis.com';
+    document.head.appendChild(pc1);
+
+    var pc2 = document.createElement('link');
+    pc2.rel = 'preconnect';
+    pc2.href = 'https://fonts.gstatic.com';
+    pc2.crossOrigin = 'anonymous';
+    document.head.appendChild(pc2);
+
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap';
+    link.setAttribute('data-po', 'brand-fonts-v1');
+    document.head.appendChild(link);
+  }
+
+  /* document.fonts may not be ready immediately; wait for fonts.ready
+     when supported, fall back to a short timer. */
+  if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+    document.fonts.ready.then(ensure, ensure);
+  } else {
+    setTimeout(ensure, 250);
+  }
+})();
+
+/* ============================================================
+   patch_advocacy_byaudience_v1.js — 2026-05-05
+   Append to /tmp/painontario-dashboard-clone/site.js, then bump
+   version.json SHA. Self-contained, idempotent, ES2015 max,
+   path-gated, no jQuery. Each block guards via data-po marker
+   so duplicate appends are no-ops.
+
+   Audits this patch closes:
+     - audit_advocacy_v1_2026-05-05.md   items 3, theme rows 6+7
+     - audit_byaudience_v1_2026-05-05.md items B1, B2
+
+   NOT covered here (handed back to Vina in Designer):
+     - Advocacy items 1, 2, 4, 5, 6, 7 (script-cleanup + markup)
+     - by-audience B3 (add Parent + Changemaker cards), B4, B5,
+       B6, B8 (markup + copy)
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   Block 1 — /advocacy*: inject .crumb host if page is missing
+   one, then let the existing breadcrumb logic populate it.
+   Scoped to /advocacy and any sub-route (mpp, briefings, etc.)
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/advocacy(\/|$)/.test(location.pathname)) return;
+  if (document.documentElement.getAttribute('data-po-advocacy-crumb') === '1') return;
+
+  function inject() {
+    if (document.querySelector('.crumb')) {
+      document.documentElement.setAttribute('data-po-advocacy-crumb', '1');
+      return true;
+    }
+    var hero = document.querySelector('.page-hero .wrap')
+            || document.querySelector('.page-hero');
+    if (!hero) return false;
+    var nav = document.createElement('nav');
+    nav.className = 'crumb';
+    nav.setAttribute('aria-label', 'Breadcrumb');
+    nav.setAttribute('data-po', 'advocacy-crumb-host');
+    nav.innerHTML = '<a href="/">Home</a> › Advocacy';
+    hero.insertBefore(nav, hero.firstChild);
+    document.documentElement.setAttribute('data-po-advocacy-crumb', '1');
+    return true;
+  }
+
+  function run() {
+    if (inject()) return;
+    [120, 400, 1200].forEach(function (t) { setTimeout(inject, t); });
+  }
+
+  if (document.readyState !== 'loading') run();
+  else document.addEventListener('DOMContentLoaded', run);
+})();
+
+
+/* ------------------------------------------------------------
+   Block 2 — /advocacy*: dark-mode coverage gaps.
+   .news-item .date stays low-contrast on #171d2c.
+   .news-item [aria-hidden] arrow keeps brand-dark on dark bg.
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/advocacy(\/|$)/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="advocacy-dark-gaps-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'advocacy-dark-gaps-v1');
+  s.textContent = [
+    'html[data-theme="dark"] .news-item .date{color:#c8e3d5!important}',
+    'html[data-theme="dark"] .news-item [aria-hidden="true"]{color:#c8e3d5!important;opacity:.85}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
+/* ------------------------------------------------------------
+   Block 3 — /by-audience: full layout CSS for the grid + cards.
+   Brand-consistent (cream light / .po-bg2 dark, Fraunces + Inter
+   Tight, brand accent focus ring, hover-lift with reduced-motion
+   opt-out). Only 4 of 6 audience cards are surfaced today (Parent
+   + Changemaker still missing) — that's a Webflow Designer task
+   for Vina, not a CSS one.
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/by-audience(\/|$)/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="by-audience-layout-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'by-audience-layout-v1');
+  s.textContent = [
+    /* page wrap */
+    '.by-audience-main{max-width:1180px;margin:0 auto;padding:0 28px}',
+    '.by-audience-hero{padding:64px 0 24px}',
+    '.by-audience-hero h1{font-family:"Fraunces",Georgia,serif;font-size:clamp(2.4rem,6vw,4.4rem);margin:0 0 .3em;color:var(--po-ink,#1F2933)}',
+    '.by-audience-hero .lede{font-family:"Inter Tight",system-ui,sans-serif;font-size:1.1rem;color:var(--po-slate,#5B6E7F);max-width:60ch;margin:0 0 24px}',
+    /* grid: 4 / 2 / 1 */
+    '.by-audience-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem;max-width:1180px;margin:2.4rem auto;padding:0}',
+    '@media (max-width:991px){.by-audience-grid{grid-template-columns:repeat(2,1fr)}}',
+    '@media (max-width:639px){.by-audience-grid{grid-template-columns:1fr}}',
+    /* card — light */
+    '.audience-card{display:block;background:#FBFAF3;border:1px solid rgba(20,40,60,.08);border-top:4px solid var(--po-accent,#1F6B7E);border-radius:18px;padding:1.2rem;text-decoration:none;color:var(--po-ink,#1F2933);box-shadow:0 2px 8px rgba(20,40,60,.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}',
+    '.audience-card:nth-child(2){border-top-color:#1F6B1D}',
+    '.audience-card:nth-child(3){border-top-color:#8C5E37}',
+    '.audience-card:nth-child(4){border-top-color:#0F3B5C}',
+    '.audience-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(20,40,60,.12);color:var(--po-ink,#1F2933)}',
+    '.audience-card:focus-visible{outline:2px solid var(--po-accent,#1F6B7E);outline-offset:2px}',
+    '.audience-card__inner{display:block}',
+    '.audience-card__eyebrow{font-family:"Inter Tight",system-ui,sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--po-green-forest,#1F6B1D);margin:0 0 .55rem}',
+    '.audience-card__title{font-family:"Fraunces",Georgia,serif;font-style:italic;font-weight:500;font-size:1.4rem;line-height:1.2;margin:0 0 .45rem;color:var(--po-ink,#1F2933)}',
+    '.audience-card__body,.audience-card__blurb{font-family:"Inter Tight",system-ui,sans-serif;font-size:.95rem;line-height:1.5;color:var(--po-slate,#5B6E7F);margin:0 0 .8rem;max-width:34ch}',
+    '.audience-card__cta{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.88rem;color:var(--po-accent,#17576A)}',
+    /* dark counterpart */
+    'html[data-theme="dark"] .audience-card{background:var(--po-bg2,#171d2c);border-color:#3a4258;color:#f5ecd2;box-shadow:0 2px 10px rgba(0,0,0,.4)}',
+    'html[data-theme="dark"] .audience-card:hover{box-shadow:0 10px 26px rgba(0,0,0,.55);color:#f5ecd2}',
+    'html[data-theme="dark"] .audience-card__title,html[data-theme="dark"] .audience-card__body,html[data-theme="dark"] .audience-card__blurb{color:#f5ecd2}',
+    'html[data-theme="dark"] .audience-card__eyebrow{color:#b6d6c8}',
+    'html[data-theme="dark"] .audience-card__cta{color:#c8e3d5}',
+    'html[data-theme="dark"] .by-audience-hero .lede{color:#dfe7d8}',
+    /* reduced motion opt-out */
+    '@media (prefers-reduced-motion: reduce){.audience-card{transition:none}.audience-card:hover{transform:none}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
+/* ------------------------------------------------------------
+   Block 4 — /resource-library/*: ingest ?audience= (and
+   ?format=, ?age=, ?region= for parity) from the URL by ticking
+   the matching chip checkbox. Click triggers the existing
+   bindChips change-listener so cmsfilter applies the filter.
+   Runs on DOMContentLoaded + 500ms + 1500ms because Finsweet
+   may not have hydrated chips on first paint. Idempotent: each
+   checkbox is only ticked once per (group,value) pair.
+   ------------------------------------------------------------ */
+(function () {
+  if (!/^\/resource-library(\/|$)/.test(location.pathname)) return;
+
+  var GROUPS = ['audience', 'format', 'age', 'region'];
+  var done = Object.create(null);
+
+  function tick() {
+    var qp;
+    try { qp = new URLSearchParams(location.search); } catch (e) { return; }
+    var anyTicked = false;
+    GROUPS.forEach(function (g) {
+      var raw = qp.get(g);
+      if (!raw) return;
+      raw.split(',').forEach(function (v) {
+        v = (v || '').trim();
+        if (!v) return;
+        var key = g + '=' + v;
+        if (done[key]) return;
+        var sel = 'input[type="checkbox"][name="' + g + '"][value="' + v.replace(/"/g, '\\"') + '"]';
+        var cb = document.querySelector(sel);
+        if (!cb) return;
+        if (!cb.checked) {
+          cb.checked = true;
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        done[key] = true;
+        anyTicked = true;
+      });
+    });
+    return anyTicked;
+  }
+
+  function run() {
+    tick();
+    setTimeout(tick, 500);
+    setTimeout(tick, 1500);
+  }
+
+  if (document.readyState !== 'loading') run();
+  else document.addEventListener('DOMContentLoaded', run);
+
+  /* Re-run after Finsweet cmsload (chips may render with the list) */
+  window.fsAttributes = window.fsAttributes || [];
+  window.fsAttributes.push(['cmsload', function () {
+    tick();
+    setTimeout(tick, 300);
+  }]);
+})();
+
+/* =====================================================================
+   patch_resources_contact_v1.js
+   Date:    2026-05-05
+   Target:  appended to site.js (single runtime, SHA-pinned via jsDelivr)
+   Scope:   /resource-library/* and /contact
+   Purpose: Fix audit findings from
+              audit_resources_v1_2026-05-05.md
+              audit_contact_v1_2026-05-05.md
+   Notes:   Each block is path-gated and idempotent via data-po= markers.
+            Plain JS, ES2015 max, no template literals where avoidable.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   BLOCK A — /resource-library/*: missing DOM nodes (#res-count, #resources-empty)
+   Audit ref: resources #1
+   Inserts placeholder elements site.js already references but the page
+   does not provide. Idempotent via data-po-injected attributes on the
+   created nodes themselves; rerunning is a no-op.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/resource-library\b/i.test(location.pathname)) return;
+
+  function injectStubs() {
+    if (document.body && document.body.dataset.poResStubs === '1') return;
+
+    var form = document.querySelector('form[fs-cmsfilter-element="filters"]')
+            || (document.getElementById('res-search') ? document.getElementById('res-search').form : null);
+    var grid = document.getElementById('resources-grid');
+    if (!form && !grid) return;
+
+    /* #res-count: tucked just inside the form, after the legend or chip-row */
+    if (!document.getElementById('res-count') && form) {
+      var count = document.createElement('span');
+      count.id = 'res-count';
+      count.className = 'res-count-line';
+      count.setAttribute('data-po', 'res-count-stub');
+      count.setAttribute('aria-live', 'polite');
+      count.textContent = '';
+      var firstChip = form.querySelector('.chip-row, fieldset');
+      if (firstChip && firstChip.parentNode) {
+        firstChip.parentNode.insertBefore(count, firstChip);
+      } else {
+        form.insertBefore(count, form.firstChild);
+      }
+    }
+
+    /* #resources-empty: placed after the grid */
+    if (!document.getElementById('resources-empty') && grid) {
+      var empty = document.createElement('div');
+      empty.id = 'resources-empty';
+      empty.setAttribute('data-po', 'resources-empty-stub');
+      empty.hidden = true;
+      empty.style.display = 'none';
+      empty.textContent = 'No matches — try clearing a filter.';
+      if (grid.parentNode) {
+        if (grid.nextSibling) {
+          grid.parentNode.insertBefore(empty, grid.nextSibling);
+        } else {
+          grid.parentNode.appendChild(empty);
+        }
+      }
+    }
+
+    if (document.body) document.body.dataset.poResStubs = '1';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectStubs);
+  } else {
+    injectStubs();
+  }
+  /* defensive re-runs: Finsweet cmsload may swap the grid in late */
+  [120, 400, 1200, 3000].forEach(function (t) { setTimeout(injectStubs, t); });
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK B — /resource-library/*: fieldset/legend styling + dark-mode controls
+   Audit ref: resources #2, #4, #5
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/resource-library\b/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="resources-fieldset-darkmode"]')) return;
+
+  var darkChevron =
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23f5ecd2' d='M6 8 0 0h12z'/></svg>\")";
+
+  var css = [
+    /* fieldset + legend reset */
+    'fieldset.chip-row{border:0;padding:0;margin:0 0 1rem;display:flex;flex-wrap:wrap;gap:8px;align-items:center}',
+    'fieldset.chip-row legend{font:600 11px/1.4 "Inter Tight",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--po-fg-muted,#6b7280);margin:0 0 .45rem;padding:0;float:left;width:100%}',
+
+    /* dark-mode legend label */
+    'html[data-theme="dark"] fieldset.chip-row legend{color:#cdc4ad!important}',
+
+    /* dark-mode controls */
+    'html[data-theme="dark"] #res-search{background-color:#1f2638!important;color:#f5ecd2!important;border-color:#3a4258!important}',
+    'html[data-theme="dark"] #res-search::placeholder{color:#cdc4ad!important;opacity:.7}',
+    'html[data-theme="dark"] #res-sort{background-color:#1f2638!important;color:#f5ecd2!important;border-color:#3a4258!important;background-image:' + darkChevron + '!important}',
+
+    /* dark-mode active-pill cluster */
+    'html[data-theme="dark"] .active-pill{background:#1f2638!important;color:#c8e3d5!important;border-color:#3a4258!important}',
+    'html[data-theme="dark"] .active-pill button{color:#c8e3d5!important}',
+    'html[data-theme="dark"] .active-pills .label{color:#cdc4ad!important}',
+    'html[data-theme="dark"] .active-pills .clear-all{color:#f6c1a3!important}',
+    'html[data-theme="dark"] .res-count-line{color:#cdc4ad!important}',
+
+    /* dark-mode chip checked state */
+    'html[data-theme="dark"] .chip:has(input:checked){background:#b6d6c8!important;color:#0e1320!important;border-color:#b6d6c8!important}'
+  ].join('');
+
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'resources-fieldset-darkmode');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK C — /resource-library/*: prevent Enter-key form submit wipe
+   Audit ref: resources #3
+   The filter form has method=get; pressing Enter in #res-search reloads
+   to '?' and erases all filter state. Suppress the submit + Enter on
+   the search input.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/resource-library\b/i.test(location.pathname)) return;
+
+  function bindFormGuards() {
+    var search = document.getElementById('res-search');
+    var form = (search && search.form)
+            || document.querySelector('form[fs-cmsfilter-element="filters"]');
+    if (!form) return;
+    if (form.dataset.poFormGuard === '1') return;
+    form.dataset.poFormGuard = '1';
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    });
+    form.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('#res-search')) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindFormGuards);
+  } else {
+    bindFormGuards();
+  }
+  [120, 400, 1200].forEach(function (t) { setTimeout(bindFormGuards, t); });
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK D — /contact: bind orphaned <label for=""> attributes
+   Audit ref: contact B1
+   For each known input id (fn, ln, em, role, msg), find a sibling/
+   ancestor empty <label for=""> and set its for attribute. If no label
+   text is present, also set aria-label on the input as a defensive
+   fallback. Idempotent via data-po-labelled marker on the input.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+
+  var FIELDS = [
+    ['fn',   'First name'],
+    ['ln',   'Last name'],
+    ['em',   'Email address'],
+    ['role', "I'm reaching out as…"],
+    ['msg',  'Message']
+  ];
+
+  function patchLabels() {
+    FIELDS.forEach(function (pair) {
+      var id = pair[0];
+      var fallback = pair[1];
+      var input = document.getElementById(id);
+      if (!input) return;
+      if (input.dataset.poLabelled === '1') return;
+
+      /* Try to find a label that is ancestor or earlier sibling */
+      var lbl = null;
+      var row = input.closest('.field-row, .form-field, .w-embed, div, fieldset');
+      if (row) {
+        lbl = row.querySelector('label[for=""]');
+        if (!lbl) {
+          /* climb one level if needed */
+          var parent = row.parentElement;
+          if (parent) lbl = parent.querySelector('label[for=""]');
+        }
+      }
+      /* Sibling-walk fallback */
+      if (!lbl) {
+        var sib = input.previousElementSibling;
+        while (sib) {
+          if (sib.tagName === 'LABEL' && (sib.getAttribute('for') === '' || !sib.getAttribute('for'))) {
+            lbl = sib; break;
+          }
+          sib = sib.previousElementSibling;
+        }
+      }
+
+      if (lbl && (!lbl.getAttribute('for'))) {
+        lbl.setAttribute('for', id);
+        lbl.setAttribute('data-po', 'label-bound');
+      }
+
+      /* Defensive aria-label if the label has no text content */
+      var labelText = lbl ? (lbl.textContent || '').trim() : '';
+      if (!labelText && !input.getAttribute('aria-label')) {
+        input.setAttribute('aria-label', fallback);
+      }
+      input.dataset.poLabelled = '1';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', patchLabels);
+  } else {
+    patchLabels();
+  }
+  [120, 400, 1200, 3000].forEach(function (t) { setTimeout(patchLabels, t); });
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK E — /contact: flip form method=get to method=post
+   Audit ref: contact B2
+   Webhook (contactwebhookv4/v5) intercepts via JS so method does not
+   matter functionally, but post is safer for the no-JS fallback so
+   form values do not leak into the URL/referer chain.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+
+  function flipMethod() {
+    var forms = document.querySelectorAll('form');
+    for (var i = 0; i < forms.length; i++) {
+      var f = forms[i];
+      if (f.dataset.poMethodFlipped === '1') continue;
+      var m = (f.getAttribute('method') || '').toLowerCase();
+      if (m !== 'post') {
+        f.setAttribute('method', 'post');
+        f.dataset.poMethodFlipped = '1';
+        f.setAttribute('data-po-orig-method', m || 'get');
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', flipMethod);
+  } else {
+    flipMethod();
+  }
+  [60, 240, 800].forEach(function (t) { setTimeout(flipMethod, t); });
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK F — /contact: hide topic <select> until setupTopic hydrates
+   Audit ref: contact B3
+   The Designer ships stub options ("First/Second/Third choice"); site.js
+   setupTopic overwrites them at runtime, but the pre-hydration paint
+   shows the stubs. Hide the select until a non-stub option is detected.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="contact-topic-prehydrate"]')) return;
+
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'contact-topic-prehydrate');
+  s.textContent =
+    '#topic[data-po-prehydrate="1"]{visibility:hidden!important}' +
+    '#topic[data-po-prehydrate="0"]{visibility:visible}';
+  document.head.appendChild(s);
+
+  var STUB_RE = /^(first|second|third)\s+choice$/i;
+
+  function hideUntilHydrated() {
+    var sel = document.getElementById('topic');
+    if (!sel) return;
+    if (sel.dataset.poTopicGate === '1') return;
+
+    /* If first option is a stub, hide */
+    var firstReal = null;
+    for (var i = 0; i < sel.options.length; i++) {
+      var o = sel.options[i];
+      var label = (o.textContent || '').trim();
+      if (label && !STUB_RE.test(label) && label.toLowerCase() !== 'select one…' && o.value !== '') {
+        firstReal = o; break;
+      }
+    }
+    if (!firstReal) {
+      sel.setAttribute('data-po-prehydrate', '1');
+      sel.dataset.poTopicGate = '1';
+      var reveal = function () {
+        var changed = false;
+        for (var j = 0; j < sel.options.length; j++) {
+          var lbl = (sel.options[j].textContent || '').trim();
+          if (lbl && !STUB_RE.test(lbl)) { changed = true; break; }
+        }
+        if (changed) {
+          sel.setAttribute('data-po-prehydrate', '0');
+          if (mo) mo.disconnect();
+        }
+      };
+      var mo = new MutationObserver(reveal);
+      mo.observe(sel, { childList: true, subtree: true, characterData: true });
+      /* hard ceiling: reveal after 4s no matter what so users are never trapped */
+      setTimeout(function () {
+        sel.setAttribute('data-po-prehydrate', '0');
+        if (mo) mo.disconnect();
+      }, 4000);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hideUntilHydrated);
+  } else {
+    hideUntilHydrated();
+  }
+  [60, 200, 600].forEach(function (t) { setTimeout(hideUntilHydrated, t); });
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK G — /contact: dark-mode coverage for .w-form widgets
+   Audit ref: contact B-theme-gap
+   Themes input/select/textarea + placeholder + select chevron under
+   html[data-theme="dark"]. Uses var fallbacks so it survives missing
+   tokens.
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="contact-form-darkmode"]')) return;
+
+  var darkChevron =
+    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23f5ecd2' d='M6 8 0 0h12z'/></svg>\")";
+
+  var css = [
+    'html[data-theme="dark"] .w-form input,',
+    'html[data-theme="dark"] .w-form select,',
+    'html[data-theme="dark"] .w-form textarea{',
+      'background-color:var(--po-bg2,#1f2638)!important;',
+      'color:var(--po-fg,#f5ecd2)!important;',
+      'border-color:var(--po-border,#3a4258)!important;',
+    '}',
+    'html[data-theme="dark"] .w-form input::placeholder,',
+    'html[data-theme="dark"] .w-form textarea::placeholder{',
+      'color:var(--po-fg-muted,#cdc4ad)!important;',
+      'opacity:.65;',
+    '}',
+    'html[data-theme="dark"] .w-form select,',
+    'html[data-theme="dark"] .w-embed select{',
+      'background-image:' + darkChevron + '!important;',
+    '}',
+    /* focus ring on submit (audit B9 — same dark-mode block) */
+    '.w-form input[type="submit"]:focus-visible{outline:3px solid #1F6B7E!important;outline-offset:3px!important}',
+    'html[data-theme="dark"] .w-form input[type="submit"]:focus-visible{outline-color:#b6d6c8!important}'
+  ].join('');
+
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'contact-form-darkmode');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
+/* ---------------------------------------------------------------------
+   BLOCK H — /contact: restore feedback link
+   Audit ref: contact B6 (recommendation: REMOVE the suppression)
+   Existing site.js (contact-wrap-layout block) sets:
+     body[data-pocontact] #feedback,
+     body[data-pocontact] .po-feedback-section,
+     body[data-pocontact] .po-feedback-link { display:none !important }
+   Override the .po-feedback-link rule with higher specificity so the
+   footer link reappears. Leaves the other two suppressed (the on-page
+   #feedback section is still injected separately by the contact
+   feedback block at line 253 — which sets data-pocontact AFTER suppression
+   conflict, so we explicitly allow it through here too).
+   --------------------------------------------------------------------- */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="contact-feedback-restore"]')) return;
+
+  var css = [
+    'html body[data-pocontact] .po-feedback-link{display:block!important}',
+    'html body[data-pocontact] #feedback,',
+    'html body[data-pocontact] .po-feedback-section{display:block!important}'
+  ].join('');
+
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'contact-feedback-restore');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
+/* end patch_resources_contact_v1.js */
+
+/* Pain Ontario — /portal patches v1 (2026-05-05)
+ *
+ * Three IIFEs, all path-gated to /^\/portal/. Idempotent via data-po-* markers.
+ *
+ * 1) A11Y + leak fixes for the portal embed:
+ *    - .po-soon tile: drop pointer-events:none, add tabindex=-1 + aria-disabled
+ *      so keyboard users skip past it but screen readers still announce it.
+ *    - aria-label on the name <select> and "someone else" <input>.
+ *    - :focus-visible rings on .po-tile, .po-change, .po-btn (cream-on-navy
+ *      kills the default outline).
+ *    - Hide site.js mobile-nav drawer, FAB stack, back link, and dark toggle
+ *      via CSS so the public IA doesn't leak into a confidential page.
+ *      (Cheaper than re-gating each site.js IIFE; no JS handlers fire because
+ *      the elements are display:none before they render.)
+ *
+ * 2) Forms tile activation:
+ *    Flips the .po-soon tile to a live link to /dashboard/forms when either
+ *    location.search includes ?activate-forms OR window.__poFormsActive===true.
+ *    Vina enables it by adding `<script>window.__poFormsActive=true;</script>`
+ *    to /portal Page Custom Code once /dashboard/forms exists.
+ *
+ * Paste into /portal Page Custom Code (Footer) below the existing embed.
+ */
+(function () {
+  if (!/^\/portal/.test(location.pathname)) return;
+
+  /* ---------- 1. a11y + leak fixes ---------- */
+  (function patchA11y() {
+    if (document.documentElement.getAttribute("data-po-portal-patched") === "v1") return;
+    document.documentElement.setAttribute("data-po-portal-patched", "v1");
+
+    // Mark <body> so the CSS overrides scope cleanly.
+    document.body.setAttribute("data-po-portal", "");
+
+    var css = [
+      // Override the pointer-events trap on the soon tile.
+      ".po-portal .po-tile.po-soon{opacity:.6;cursor:not-allowed;pointer-events:auto}",
+      ".po-portal .po-tile.po-soon:hover{transform:none;border-color:rgba(245,239,226,.14);background:rgba(245,239,226,.05)}",
+      // Focus rings — cream-on-navy needs an explicit ring.
+      ".po-portal .po-tile:focus-visible{outline:2px solid #78bc9c;outline-offset:2px;border-radius:18px}",
+      ".po-portal .po-change:focus-visible{outline:2px solid #78bc9c;outline-offset:2px;border-radius:4px}",
+      ".po-portal .po-btn:focus-visible{outline:2px solid #78bc9c;outline-offset:2px}",
+      // Hide site-wide affordances on /portal (mobile nav drawer, FAB, back link, dark toggle).
+      "body[data-po-portal] .po-mn-trigger,",
+      "body[data-po-portal] .po-mn-drawer,",
+      "body[data-po-portal] .po-mn-scrim,",
+      "body[data-po-portal] .po-fab-stack,",
+      "body[data-po-portal] .po-back,",
+      "body[data-po-portal] .po-tt{display:none !important}"
+    ].join("\n");
+
+    var styleEl = document.createElement("style");
+    styleEl.setAttribute("data-po", "portal-patch-v1");
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+
+    // DOM patches — run after the embed renders. The embed inlines its script,
+    // so by the time this IIFE fires the nodes already exist; still guard with
+    // a tiny RAF in case the order changes.
+    function applyDom() {
+      var soon = document.querySelector(".po-portal .po-tile.po-soon");
+      if (soon && soon.getAttribute("data-po-soon-patched") !== "1") {
+        soon.setAttribute("data-po-soon-patched", "1");
+        soon.setAttribute("tabindex", "-1");
+        // aria-disabled is already present in the embed; ensure it's set.
+        if (!soon.hasAttribute("aria-disabled")) soon.setAttribute("aria-disabled", "true");
+        // Stop Enter/click jumping the page to # before aria-disabled fires.
+        soon.addEventListener("click", function (e) { e.preventDefault(); });
+      }
+
+      var sel = document.getElementById("po-name-select");
+      if (sel && !sel.getAttribute("aria-label")) sel.setAttribute("aria-label", "Pick your name");
+
+      var oth = document.getElementById("po-other-input");
+      if (oth && !oth.getAttribute("aria-label")) oth.setAttribute("aria-label", "Type your name");
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", applyDom, { once: true });
+    } else {
+      applyDom();
+    }
+  })();
+
+  /* ---------- 2. Forms tile activation (opt-in) ---------- */
+  (function patchFormsTile() {
+    var activate = /[?&]activate-forms(?:=|&|$)/.test(location.search) ||
+                   window.__poFormsActive === true;
+    if (!activate) return;
+
+    function flip() {
+      var tile = document.querySelector(".po-portal .po-tile.po-soon");
+      if (!tile || tile.getAttribute("data-po-forms-active") === "1") return;
+      tile.setAttribute("data-po-forms-active", "1");
+
+      tile.classList.remove("po-soon");
+      tile.removeAttribute("aria-disabled");
+      tile.removeAttribute("tabindex");
+      tile.setAttribute("href", "/dashboard/forms");
+
+      var eyebrow = tile.querySelector(".po-tile-eyebrow");
+      if (eyebrow) eyebrow.textContent = "Forms — open";
+
+      var cta = tile.querySelector(".po-tile-cta");
+      if (cta) cta.textContent = "Open /dashboard/forms →";
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", flip, { once: true });
+    } else {
+      flip();
+    }
+  })();
+})();
+
