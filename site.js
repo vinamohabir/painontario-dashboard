@@ -309,6 +309,11 @@ go();
     document.head.appendChild(s);
   }
 
+  /* Also load cmsload so all three Finsweet modules arrive together
+     and coordinate. Once /resource-library Page Custom Code's inline
+     cmsload <script> is removed, this is the single source of truth. */
+  var needsLoad = !!document.querySelector('[fs-cmsload-element]');
+  if (needsLoad) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
   if (needsFilter) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
   if (needsSort)   load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
 })();
