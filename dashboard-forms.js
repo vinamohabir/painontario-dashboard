@@ -99,6 +99,9 @@
   }
   if (root.getAttribute("data-po") === "forms-v1") return; /* idempotent */
   root.setAttribute("data-po", "forms-v1");
+  /* a11y: mark forms dashboard root as the main landmark */
+  root.setAttribute("role", "main");
+  if (!root.getAttribute("aria-label")) root.setAttribute("aria-label", "Web inquiries dashboard");
 
   injectStyle();
   renderShell();

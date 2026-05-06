@@ -26,6 +26,9 @@
       root.id = "po-dash-root";
       document.body.appendChild(root);
     }
+    /* a11y: mark dashboard root as the main landmark */
+    root.setAttribute("role", "main");
+    if (!root.getAttribute("aria-label")) root.setAttribute("aria-label", "Board applications dashboard");
     root.innerHTML = HTML;
   }
 

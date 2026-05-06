@@ -442,6 +442,58 @@ go();
 })();
 
 
+/* Block 0c: /resource-library/by-audience — append Changemakers tile.
+   Mirrors existing .audience-card markup. Idempotent. */
+(function(){
+  if (!/\/resource-library\/by-audience/.test(location.pathname)) return;
+  function inject(){
+    var grid = document.querySelector('.by-audience-grid');
+    if (!grid) return;
+    if (grid.querySelector('a[href*="audience=changemaker"]')) return;
+    var a = document.createElement('a');
+    a.href = '/resource-library/all?audience=changemaker';
+    a.className = 'audience-card w-inline-block';
+    a.setAttribute('aria-label', 'Resources for Changemakers');
+    a.setAttribute('data-po', 'changemaker-tile-v1');
+    a.innerHTML = '<div class="audience-card__inner"><p class="audience-card__eyebrow">For you</p><h2 class="audience-card__title">Changemakers</h2><p class="audience-card__blurb">Tools for advocates, community organizers, and people building public conversation about pain.</p><span class="audience-card__cta">See resources →</span></div>';
+    grid.appendChild(a);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
+  else inject();
+  [400, 1200, 3000].forEach(function(ms){ setTimeout(inject, ms); });
+})();
+
+
+/* Block 0d: brand the Webflow password gate (visible when /dashboard/* is hit
+   without page password). Webflow renders a stripped <form name="passwordform">
+   page; site.js does load there. */
+(function(){
+  if (!document.querySelector('form[name="passwordform"], form[data-name="Password"], input[name="password"]')) return;
+  if (document.querySelector('style[data-po="auth-gate-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'auth-gate-v1');
+  s.textContent = [
+    'html,body{background:#f5efe2!important;color:#1F2933!important;font-family:"Inter Tight",system-ui,-apple-system,sans-serif!important;margin:0!important}',
+    'html[data-theme="dark"] body{background:#0e1320!important;color:#f5ecd2!important}',
+    'body{min-height:100vh!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:2rem!important;box-sizing:border-box!important}',
+    'form[name="passwordform"],form[data-name="Password"]{max-width:420px!important;width:100%!important;background:#fff!important;border-radius:18px!important;border:1px solid rgba(31,41,51,.08)!important;padding:2rem 1.75rem!important;box-shadow:0 18px 44px rgba(15,37,64,.12)!important}',
+    'html[data-theme="dark"] form[name="passwordform"],html[data-theme="dark"] form[data-name="Password"]{background:#171d2c!important;border-color:#3a4258!important;box-shadow:0 18px 44px rgba(0,0,0,.45)!important}',
+    'form[name="passwordform"]::before{content:"Pain Ontario";display:block;font:600 1.5rem/1.2 "Fraunces",Georgia,serif;color:#1F6B7E;margin-bottom:.5rem}',
+    'html[data-theme="dark"] form[name="passwordform"]::before{color:#b6d6c8}',
+    'form[name="passwordform"] h2,form[name="passwordform"] h3,form[name="passwordform"] p:first-of-type{font:500 .95rem/1.45 "Inter Tight",sans-serif;color:inherit;margin:0 0 1.25rem!important}',
+    'form[name="passwordform"] label{display:block;font-weight:600;margin-bottom:.5rem!important;font-size:.9rem}',
+    'form[name="passwordform"] input[type="password"]{width:100%!important;padding:.75rem .9rem!important;border:1px solid rgba(31,41,51,.25)!important;border-radius:10px!important;font:inherit!important;color:inherit!important;background:transparent!important;box-sizing:border-box!important;margin-bottom:1rem!important}',
+    'form[name="passwordform"] input[type="password"]:focus{outline:2px solid #1F6B7E!important;outline-offset:1px!important}',
+    'html[data-theme="dark"] form[name="passwordform"] input[type="password"]{border-color:#3a4258!important}',
+    'form[name="passwordform"] input[type="submit"],form[name="passwordform"] button[type="submit"]{display:inline-block!important;padding:.75rem 1.5rem!important;background:#1F6B7E!important;color:#fff!important;border:none!important;border-radius:999px!important;font:600 .95rem/1 "Inter Tight",sans-serif!important;cursor:pointer!important;width:auto!important}',
+    'html[data-theme="dark"] form[name="passwordform"] input[type="submit"],html[data-theme="dark"] form[name="passwordform"] button[type="submit"]{background:#b6d6c8!important;color:#0e1320!important}',
+    'form[name="passwordform"] input[type="submit"]:hover,form[name="passwordform"] button[type="submit"]:hover{filter:brightness(.92)!important}',
+    'form[name="passwordform"] .w-password-page-error,form[name="passwordform"] [class*="error"]{color:#b53535!important;font-size:.85rem;margin-top:.5rem!important}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
 /* Block A: full role-card CSS restore (chip strip + role card + equity band + hiring process timeline + 2-col responsibilities/profile with checkmark bullets) */
 (function(){
   if (!/\/about\/jobs/.test(location.pathname)) return;
