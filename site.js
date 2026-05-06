@@ -2474,3 +2474,57 @@ sweep();
   [200, 600, 1500, 3500].forEach(function (t) { setTimeout(p, t); });
 })();
 
+
+
+/* === Dashboard back-to-portal arrow (2026-05-06)
+   Adds a small "← Portal" link at top-left of /dashboard/jobs and
+   /dashboard/forms so board members can navigate back without using
+   browser back. Path-gated, idempotent, dark-mode tuned. */
+!function(){
+  if (!/^\/dashboard\/(jobs|forms)(\/|$)/.test(location.pathname)) return;
+  if (document.querySelector('[data-po="dashboard-portal-back"]')) return;
+  if (document.getElementById('po-dash-back')) return;
+
+  function inject(){
+    if (document.getElementById('po-dash-back')) return;
+    if (!document.body) return;
+    var s = document.createElement('style');
+    s.setAttribute('data-po', 'dashboard-portal-back');
+    s.textContent = (
+      '#po-dash-back{position:fixed;top:1rem;left:1rem;z-index:9990;'
+      + 'display:inline-flex;align-items:center;gap:.45rem;'
+      + 'padding:.5rem .85rem;border-radius:999px;'
+      + 'background:rgba(245,239,226,.08);'
+      + 'border:1px solid rgba(245,239,226,.22);'
+      + 'color:#f5efe2;font:500 .82rem/1 "Inter Tight",system-ui,sans-serif;'
+      + 'text-decoration:none;cursor:pointer;'
+      + 'backdrop-filter:saturate(140%) blur(4px);'
+      + '-webkit-backdrop-filter:saturate(140%) blur(4px);'
+      + 'transition:background .15s ease,border-color .15s ease,transform .15s ease}'
+      + '#po-dash-back:hover{background:rgba(120,188,156,.16);border-color:rgba(120,188,156,.55);transform:translateX(-2px);color:#f5efe2}'
+      + '#po-dash-back:focus-visible{outline:2px solid #78bc9c;outline-offset:2px}'
+      + '#po-dash-back .po-bk-arrow{font-size:1em;line-height:1;display:inline-block;transition:transform .15s ease}'
+      + '#po-dash-back:hover .po-bk-arrow{transform:translateX(-2px)}'
+      + 'html[data-theme="light"] #po-dash-back{background:rgba(31,107,126,.08);border-color:rgba(31,107,126,.32);color:#1F6B7E}'
+      + 'html[data-theme="light"] #po-dash-back:hover{background:rgba(31,107,126,.14);border-color:rgba(31,107,126,.55);color:#1F6B7E}'
+      + '@media (prefers-reduced-motion: reduce){#po-dash-back,#po-dash-back .po-bk-arrow{transition:none!important;transform:none!important}}'
+      + '@media print{#po-dash-back{display:none!important}}'
+    );
+    document.head.appendChild(s);
+
+    var a = document.createElement('a');
+    a.id = 'po-dash-back';
+    a.href = '/dashboard/portal';
+    a.setAttribute('aria-label', 'Back to board portal');
+    a.innerHTML = '<span class="po-bk-arrow" aria-hidden="true">←</span> <span>Portal</span>';
+    document.body.appendChild(a);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inject);
+  } else {
+    inject();
+  }
+  /* Re-injection guard if dashboard.js wipes the DOM later */
+  setTimeout(inject, 1500);
+  setTimeout(inject, 5000);
+}();
