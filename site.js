@@ -2941,3 +2941,55 @@ sweep();
   s.textContent = css;
   document.head.appendChild(s);
 })();
+
+/* navdarkbrand-v1 — dark-mode nav: sage active dot + hover pill (Pain Ontario circular brand). */
+(function(){
+  if(document.querySelector('style[data-po="navdarkbrand-v1"]'))return;
+  var css = [
+    /* Active link — sage filled dot, drop italic + underline */
+    'html[data-theme="dark"] .navbar a.w--current,',
+    'html[data-theme="dark"] .navbar [aria-current="page"]{',
+      'position:relative;',
+      'font-style:normal!important;',
+      'text-decoration:none!important;',
+      'padding-left:1.15rem!important;',
+      'color:var(--po-accent,#b6d6c8)!important;',
+    '}',
+    'html[data-theme="dark"] .navbar a.w--current::before,',
+    'html[data-theme="dark"] .navbar [aria-current="page"]::before{',
+      'content:"";',
+      'position:absolute;',
+      'left:0;',
+      'top:50%;',
+      'transform:translateY(-50%);',
+      'width:.55rem;height:.55rem;',
+      'border-radius:50%;',
+      'background:var(--po-accent,#b6d6c8);',
+      'box-shadow:0 0 0 4px rgba(120,188,156,.18);',
+    '}',
+    /* Nav links — pill on hover */
+    'html[data-theme="dark"] .navbar .nav-menu a,',
+    'html[data-theme="dark"] .navbar .nav-link,',
+    'html[data-theme="dark"] .navbar .w-nav-link{',
+      'border-radius:999px;',
+      'padding:.4rem .85rem!important;',
+      'transition:background-color .15s ease, color .15s ease;',
+    '}',
+    'html[data-theme="dark"] .navbar .nav-menu a:hover,',
+    'html[data-theme="dark"] .navbar .nav-link:hover,',
+    'html[data-theme="dark"] .navbar .w-nav-link:hover{',
+      'background-color:rgba(120,188,156,.14)!important;',
+      'color:#fff!important;',
+    '}',
+    /* Slightly more space between brand block and nav menu */
+    'html[data-theme="dark"] .navbar .container-8,',
+    'html[data-theme="dark"] header.navbar > [class*="container"]{',
+      'gap:1.4rem;',
+    '}'
+  ].join('');
+  var s = document.createElement('style');
+  s.setAttribute('data-po','navdarkbrand-v1');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
