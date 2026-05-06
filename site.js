@@ -2857,3 +2857,35 @@ sweep();
     document.head.appendChild(s);
   }
 }();
+
+/* ----------------------------------------------------------------
+   pop_logo_plate_v1 (2026-05-06)
+   Adult POP portal logo (Logo5_revised-removebg-preview.png) was
+   exported with the white hand stripped to transparency, so on the
+   dark-mode resource-library page the hand vanishes into the navy
+   background. Drop a soft cream rounded plate behind both POP logo
+   wrappers in dark mode so the light/transparent areas read white
+   against a consistent surface, matching the rest of the dark theme.
+   Path-gated to /resource-library/.
+---------------------------------------------------------------- */
+(function(){
+  if (!/^\/resource-library\b/.test(location.pathname)) return;
+  if (document.documentElement.getAttribute('data-po-pop-plate') === 'v1') return;
+  document.documentElement.setAttribute('data-po-pop-plate', 'v1');
+  var css =
+    'html[data-theme="dark"] .inline-section-0 .div-block-19{'+
+      'background-color:#f5ecd2;'+
+      'border-radius:18px;'+
+      'padding:14px;'+
+      'display:inline-block;'+
+      'box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 2px 10px rgba(0,0,0,.18);'+
+    '}'+
+    'html[data-theme="dark"] .inline-section-0 .div-block-19 img{'+
+      'display:block;'+
+      'background:transparent!important;'+
+    '}';
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'pop-logo-plate');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
