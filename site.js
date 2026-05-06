@@ -471,8 +471,13 @@ go();
     'html[data-theme="dark"] .nav-link-7:focus-visible,html[data-theme="dark"] .w-nav-link:focus-visible,html[data-theme="dark"] .w-dropdown-link:focus-visible{outline-color:#9bd6e8!important}',
 
     /* Replace the existing 8.8px dot indicator on .w--current with the same
-       underline used by hover, so the active state matches the hover treatment. */
-    'html .nav-link-7.w--current::before,html .w-nav-link.w--current::before{display:none!important;content:none!important}',
+       underline used by hover, so the active state matches the hover treatment.
+       Scope hides every .w--current::before/::after dot anywhere in the nav
+       (covers .container-11.w--current logo dots that bleed in dark mode). */
+    'html nav .w--current::before,html header .w--current::before,html .navbar .w--current::before,html .w-nav .w--current::before{display:none!important;content:none!important;background:transparent!important}',
+    'html nav .w--current::after,html header .w--current::after,html .navbar .w--current::after,html .w-nav .w--current::after{background:transparent!important}',
+    /* But put back our underline on the nav links specifically */
+    'html .nav-link-7.w--current::after,html .w-nav-link.w--current::after{background:currentColor!important;transform:scaleX(1)!important}',
     'html .nav-link-7.w--current,html .w-nav-link.w--current{color:#1F6B7E!important}',
     'html[data-theme="dark"] .nav-link-7.w--current,html[data-theme="dark"] .w-nav-link.w--current{color:#9bd6e8!important}',
 
