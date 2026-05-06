@@ -2539,3 +2539,167 @@ sweep();
   setTimeout(inject, 1500);
   setTimeout(inject, 5000);
 }();
+
+
+/* === A11y + QI bundle (2026-05-06)
+   - JSON-LD Organization + WebSite schema (site-wide)
+   - Skip-link element (one is rendered, target #main)
+   - <main> landmark wrap when not already present
+   - Nav aria-label patches
+   - File input aria-label patches on /about/jobs
+   - Tap-target size CSS bumps (≥44x44 per WCAG 2.5.5) */
+!function(){
+  /* JSON-LD: Organization + WebSite. Injected once, idempotent. */
+  if (!document.querySelector('script[type="application/ld+json"][data-po="org-schema"]')) {
+    var orgSchema = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.painontario.ca/#organization",
+          "name": "Pain Ontario",
+          "url": "https://www.painontario.ca/",
+          "logo": "https://www.painontario.ca/images/painontario-logo.svg",
+          "description": "Pain Ontario is a community-based nonprofit working to transform how pain is understood and cared for across Ontario, grounded in lived and living experience.",
+          "sameAs": [
+            "https://www.linkedin.com/company/pain-ontario",
+            "https://twitter.com/painontario"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.painontario.ca/#website",
+          "url": "https://www.painontario.ca/",
+          "name": "Pain Ontario",
+          "publisher": { "@id": "https://www.painontario.ca/#organization" },
+          "inLanguage": "en-CA"
+        }
+      ]
+    };
+    var s1 = document.createElement('script');
+    s1.setAttribute('type', 'application/ld+json');
+    s1.setAttribute('data-po', 'org-schema');
+    s1.textContent = JSON.stringify(orgSchema);
+    document.head.appendChild(s1);
+  }
+
+  /* Tap-target size + a11y CSS */
+  if (!document.querySelector('style[data-po="a11y-tap-skip"]')) {
+    var s2 = document.createElement('style');
+    s2.setAttribute('data-po', 'a11y-tap-skip');
+    s2.textContent = (
+      /* Skip link: visible on focus only */
+      '.po-skip-link{position:absolute;left:1rem;top:-3rem;z-index:10000;'
+      + 'background:#1F6B7E;color:#fff;padding:.7rem 1rem;'
+      + 'border-radius:.5rem;font:600 .9rem/1 "Inter Tight",system-ui,sans-serif;'
+      + 'text-decoration:none;transition:top .15s ease}'
+      + '.po-skip-link:focus,.po-skip-link:focus-visible{top:1rem;outline:2px solid #fff;outline-offset:2px}'
+      + 'html[data-theme="dark"] .po-skip-link{background:#78bc9c;color:#0e1320}'
+      /* Tap target floor: 44px for nav links + buttons + tile arrows.
+         Conservative — only widens when below floor; leaves text rules alone. */
+      + '@media (max-width:991px){'
+      +   '.w-nav-link,.w-nav-menu a,nav a,.po-fab,.po-tt,.po-mn-trigger,'
+      +   '.po-mn-close,button[aria-label="Close menu"]{'
+      +     'min-height:44px!important;min-width:44px!important;'
+      +     'display:inline-flex;align-items:center;justify-content:center}'
+      + '}'
+      /* Reduced motion: kill-switch (audit said only 3 in 40KB CSS) */
+      + '@media (prefers-reduced-motion: reduce){'
+      +   '*,*::before,*::after{'
+      +     'animation-duration:0.001ms!important;'
+      +     'animation-iteration-count:1!important;'
+      +     'transition-duration:0.001ms!important;'
+      +     'scroll-behavior:auto!important}'
+      + '}'
+    );
+    document.head.appendChild(s2);
+  }
+
+  /* Skip-link element + main landmark, idempotent */
+  function injectA11yLandmarks(){
+    if (!document.body) return;
+    /* Skip link: render once at top of body, point to #main */
+    if (!document.querySelector('.po-skip-link')) {
+      var sl = document.createElement('a');
+      sl.className = 'po-skip-link';
+      sl.href = '#main';
+      sl.textContent = 'Skip to main content';
+      document.body.insertBefore(sl, document.body.firstChild);
+    }
+    /* If no <main> exists, find the first <section> after the nav and wrap with id="main" */
+    if (!document.querySelector('main, [role="main"], #main')) {
+      var firstSection = null;
+      var children = document.body.children;
+      var inMain = false;
+      for (var i = 0; i < children.length; i++) {
+        var c = children[i];
+        if (c.tagName === 'NAV' || c.classList.contains('w-nav') || c.classList.contains('navbar')) { inMain = true; continue; }
+        if (inMain && (c.tagName === 'SECTION' || c.classList.contains('section') || c.classList.contains('hero') || c.classList.contains('page-hero'))) { firstSection = c; break; }
+      }
+      if (firstSection && !firstSection.id) {
+        firstSection.id = 'main';
+        firstSection.setAttribute('role', 'main');
+      }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectA11yLandmarks);
+  } else {
+    injectA11yLandmarks();
+  }
+  setTimeout(injectA11yLandmarks, 1500);
+
+  /* Nav aria-labels (don't override existing) */
+  function labelNavs(){
+    var headerNav = document.querySelector('header nav, .navbar nav, nav.w-nav, nav.navbar');
+    if (headerNav && !headerNav.getAttribute('aria-label')) {
+      headerNav.setAttribute('aria-label', 'Site primary navigation');
+    }
+    var footerNav = document.querySelector('footer nav, .footer nav');
+    if (footerNav && !footerNav.getAttribute('aria-label')) {
+      footerNav.setAttribute('aria-label', 'Footer navigation');
+    }
+    var dropdowns = document.querySelectorAll('nav .w-dropdown-list');
+    Array.prototype.forEach.call(dropdowns, function(d){
+      if (!d.getAttribute('aria-label')) {
+        var trigger = d.parentElement && d.parentElement.querySelector('.w-dropdown-toggle');
+        var label = trigger ? (trigger.textContent || '').trim() : 'Submenu';
+        d.setAttribute('aria-label', label + ' submenu');
+      }
+    });
+  }
+  labelNavs();
+  setTimeout(labelNavs, 1200);
+
+  /* /about/jobs file inputs aria-label */
+  if (/^\/about\/jobs(\/|$)/.test(location.pathname)) {
+    function labelFiles(){
+      var resume = document.querySelector('input[type="file"][name="Resume"]');
+      var cover = document.querySelector('input[type="file"][name="Cover-Letter"]');
+      if (resume && !resume.getAttribute('aria-label')) {
+        resume.setAttribute('aria-label', 'Upload your resume (PDF, DOC, or DOCX, max 5 MB)');
+      }
+      if (cover && !cover.getAttribute('aria-label')) {
+        cover.setAttribute('aria-label', 'Upload your cover letter (optional)');
+      }
+    }
+    labelFiles();
+    setTimeout(labelFiles, 1500);
+    setTimeout(labelFiles, 4000);
+  }
+
+  /* /by-audience tile aria-labels (audit P1) */
+  if (/^\/by-audience|^\/resource-library\/by-audience/.test(location.pathname)) {
+    function labelAudienceTiles(){
+      var tiles = document.querySelectorAll('.audience-card');
+      Array.prototype.forEach.call(tiles, function(tile){
+        if (tile.getAttribute('aria-label')) return;
+        var title = tile.querySelector('.audience-card__title, h2, h3');
+        var t = title ? (title.textContent || '').trim() : '';
+        if (t) tile.setAttribute('aria-label', 'Resources for ' + t);
+      });
+    }
+    labelAudienceTiles();
+    setTimeout(labelAudienceTiles, 1500);
+  }
+}();
