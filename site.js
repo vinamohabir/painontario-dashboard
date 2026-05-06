@@ -535,6 +535,21 @@ go();
 })();
 
 
+/* Block 0g: /news-updates/in-the-media — fix cream-on-cream badge text in dark
+   mode. .resource-card__badge has cream bg; dark-mode preflight forces text
+   colour to cream too → invisible. Force dark text on the cream badge in dark
+   mode so the source name (e.g. "SickKids") stays readable. */
+(function(){
+  if (document.querySelector('style[data-po="news-badge-dark-fix-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'news-badge-dark-fix-v1');
+  s.textContent = [
+    'html[data-theme="dark"] body .resource-card__badge,html[data-theme="dark"] body .resource-card__badge *{color:#1F2933!important;background-color:#efedde!important}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
 /* Block 0c: /resource-library/by-audience — append Changemakers tile.
    Mirrors existing .audience-card markup. Idempotent. */
 (function(){
