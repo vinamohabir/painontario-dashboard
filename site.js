@@ -466,49 +466,68 @@ go();
 })();
 
 
-/* Block 0e: nav hover — visible accessible color shift + underline grow on
-   .nav-link-7 / .w-nav-link / .w-dropdown-link. WCAG AA contrast in both
-   modes; focus-visible state for keyboard; prefers-reduced-motion respected. */
+/* Block 0e: nav hover + active — visible accessible color shift + underline
+   grow. Targets .nav-link-7 / .w-nav-link / .w-dropdown-toggle (dropdown
+   parents like About/News/Advocacy/Resources) / .w-dropdown-link (sub-items).
+   JS marks dropdown toggles whose dropdown contains .w--current. */
 (function(){
-  if (document.querySelector('style[data-po="nav-hover-v1"]')) return;
+  if (document.querySelector('style[data-po="nav-hover-v2"]')) return;
   var s = document.createElement('style');
-  s.setAttribute('data-po', 'nav-hover-v1');
+  s.setAttribute('data-po', 'nav-hover-v2');
+  /* Selector groups */
+  var TOP   = 'html .nav-link-7,html .w-nav-link,html .w-dropdown-toggle';      /* top-level nav clickables */
+  var TOP_H = 'html .nav-link-7:hover,html .w-nav-link:hover,html .w-dropdown-toggle:hover'; /* hover */
+  var TOP_C = 'html .nav-link-7.w--current,html .w-nav-link.w--current,html .w-dropdown-toggle[data-po-nav-current="1"]'; /* active */
   s.textContent = [
-    /* Base — establish a relative anchor + smooth transitions */
-    'html .nav-link-7,html .w-nav-link,html .w-dropdown-link{position:relative;transition:color .18s ease,background-color .18s ease!important}',
+    /* Base — relative anchor + smooth transitions */
+    TOP + '{position:relative;transition:color .18s ease,background-color .18s ease!important}',
 
-    /* Light mode hover: sky brand color + underline grows under text */
-    'html .nav-link-7:hover,html .w-nav-link:hover{color:#1F6B7E!important}',
-    'html .nav-link-7::after,html .w-nav-link::after{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;background:currentColor;transform:scaleX(0);transform-origin:center;transition:transform .2s ease;border-radius:2px;pointer-events:none}',
-    'html .nav-link-7:hover::after,html .w-nav-link:hover::after,html .nav-link-7.w--current::after,html .w-nav-link.w--current::after{transform:scaleX(1)}',
+    /* Underline — applies to ALL top-level items (links + dropdown toggles) */
+    TOP.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;background:currentColor;transform:scaleX(0);transform-origin:center;transition:transform .2s ease;border-radius:2px;pointer-events:none}',
 
-    /* Dropdown items get a subtle pill-fill hover (no underline since they sit on a panel) */
-    'html .w-dropdown-link::after{display:none}',
+    /* Hover state — light mode sky brand */
+    TOP_H + '{color:#1F6B7E!important}',
+    TOP_H.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transform:scaleX(1)}',
+
+    /* Active state — same treatment */
+    TOP_C + '{color:#1F6B7E!important}',
+    TOP_C.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transform:scaleX(1)!important;background:currentColor!important}',
+
+    /* Dropdown sub-items — subtle pill-fill hover (no underline) */
+    'html .w-dropdown-link::after{display:none!important}',
     'html .w-dropdown-link:hover{color:#1F6B7E!important;background-color:rgba(31,107,126,0.08)!important}',
 
-    /* Dark mode: shift to brighter teal (#9bd6e8) for visible contrast on dark nav */
-    'html[data-theme="dark"] .nav-link-7:hover,html[data-theme="dark"] .w-nav-link:hover{color:#9bd6e8!important}',
+    /* Dark mode — brighter teal #9bd6e8 */
+    'html[data-theme="dark"] .nav-link-7:hover,html[data-theme="dark"] .w-nav-link:hover,html[data-theme="dark"] .w-dropdown-toggle:hover{color:#9bd6e8!important}',
+    'html[data-theme="dark"] .nav-link-7.w--current,html[data-theme="dark"] .w-nav-link.w--current,html[data-theme="dark"] .w-dropdown-toggle[data-po-nav-current="1"]{color:#9bd6e8!important}',
     'html[data-theme="dark"] .w-dropdown-link:hover{color:#c5e7f1!important;background-color:rgba(155,214,232,0.10)!important}',
 
-    /* Focus-visible: 2px brand outline on keyboard nav */
-    'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
-    'html[data-theme="dark"] .nav-link-7:focus-visible,html[data-theme="dark"] .w-nav-link:focus-visible,html[data-theme="dark"] .w-dropdown-link:focus-visible{outline-color:#9bd6e8!important}',
+    /* Focus-visible — 2px brand outline */
+    'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-toggle:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
+    'html[data-theme="dark"] .nav-link-7:focus-visible,html[data-theme="dark"] .w-nav-link:focus-visible,html[data-theme="dark"] .w-dropdown-toggle:focus-visible,html[data-theme="dark"] .w-dropdown-link:focus-visible{outline-color:#9bd6e8!important}',
 
-    /* Replace the existing 8.8px dot indicator on .w--current with the same
-       underline used by hover, so the active state matches the hover treatment.
-       Scope hides every .w--current::before/::after dot anywhere in the nav
-       (covers .container-11.w--current logo dots that bleed in dark mode). */
+    /* Kill ALL .w--current decorative dots in nav */
     'html nav .w--current::before,html header .w--current::before,html .navbar .w--current::before,html .w-nav .w--current::before{display:none!important;content:none!important;background:transparent!important}',
-    'html nav .w--current::after,html header .w--current::after,html .navbar .w--current::after,html .w-nav .w--current::after{background:transparent!important}',
-    /* But put back our underline on the nav links specifically */
-    'html .nav-link-7.w--current::after,html .w-nav-link.w--current::after{background:currentColor!important;transform:scaleX(1)!important}',
-    'html .nav-link-7.w--current,html .w-nav-link.w--current{color:#1F6B7E!important}',
-    'html[data-theme="dark"] .nav-link-7.w--current,html[data-theme="dark"] .w-nav-link.w--current{color:#9bd6e8!important}',
 
-    /* Reduced-motion: keep color shift, drop the underline grow + transitions */
-    '@media (prefers-reduced-motion: reduce){html .nav-link-7,html .w-nav-link,html .w-dropdown-link,html .nav-link-7::after,html .w-nav-link::after{transition:none!important}html .nav-link-7::after,html .w-nav-link::after{transform:scaleX(1);opacity:.5}html .nav-link-7:hover::after,html .w-nav-link:hover::after{opacity:1}}'
+    /* Reduced-motion — keep color shift, static underline */
+    '@media (prefers-reduced-motion: reduce){' + TOP + ',' + TOP.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transition:none!important}' + TOP.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transform:scaleX(1);opacity:.5}' + TOP_H.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + ',' + TOP_C.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{opacity:1}}'
   ].join('');
   document.head.appendChild(s);
+
+  /* JS: mark dropdown toggles whose dropdown contains a .w--current sub-item */
+  function markCurrentToggles(){
+    var dropdowns = document.querySelectorAll('.w-dropdown');
+    Array.prototype.forEach.call(dropdowns, function(d){
+      var t = d.querySelector('.w-dropdown-toggle');
+      if (!t) return;
+      var hasCurrent = !!d.querySelector('.w-dropdown-link.w--current, .w--current');
+      if (hasCurrent) t.setAttribute('data-po-nav-current', '1');
+      else t.removeAttribute('data-po-nav-current');
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', markCurrentToggles);
+  else markCurrentToggles();
+  [400, 1500, 4000].forEach(function(ms){ setTimeout(markCurrentToggles, ms); });
 })();
 
 
