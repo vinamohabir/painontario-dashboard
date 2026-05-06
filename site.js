@@ -255,3 +255,133 @@ go();
 /* --- footer block 15 --- */
 !function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;var p=function(){var e=document.querySelector('.po-jbs-eq');if(!e||e.dataset.v==='2')return!1;e.dataset.v='2';e.innerHTML='<h3>Who we want to hear from</h3><p>We\'re especially looking for applications from people with lived and living experience of chronic pain, Indigenous Peoples, Black and other racialized candidates, 2SLGBTQ+ candidates, Disabled candidates, and people from working-class and rural communities.</p><p>If you need an accommodation at any stage, write to <a href="mailto:info@painontario.ca">info@painontario.ca</a> and we\'ll arrange it. You don\'t need to disclose a reason.</p>';return!0};p();[200,500,1000,2000,4000].forEach(function(d){setTimeout(p,d)});var s=document.createElement('style');s.setAttribute('data-po','jobsequityandpillrestylev2');s.textContent='.po-jbs-st{background:#fff!important;color:#1F6B7E!important;border:1.5px solid #1F6B7E!important;font-weight:500!important;padding:.55rem 1.1rem!important;font-size:.95rem!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,0.08)!important;display:inline-flex!important;align-items:center!important;gap:.4rem!important;text-decoration:none!important}.po-jbs-st:hover{background:#1F6B7E!important;color:#fff!important}.po-jbs-st b,.po-jbs-st span,.po-jbs-st small{background:transparent!important;color:inherit!important;opacity:.7!important;font-size:.78em!important;font-weight:400!important;padding:0!important;border-radius:0!important;letter-spacing:normal!important}html[data-theme="dark"] .po-jbs-st{background:rgba(31,107,126,0.15)!important;color:#f5ecd2!important;border-color:#f5ecd2!important}html[data-theme="dark"] .po-jbs-st:hover{background:#f5ecd2!important;color:#171d2c!important}html[data-theme="dark"] .po-jbs-st *{color:inherit!important}';document.head.appendChild(s)}();
 
+/* --- v2 additions: chip-strip restore + kicker-as-link --- */
+
+/* Block A: chip-strip CSS restore (for /about/jobs role card) */
+(function(){
+  if (!/\/about\/jobs/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="chipsv2-restore"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'chipsv2-restore');
+  s.textContent = [
+    'body[data-pojobs] .po-jbs-rc{background:rgba(245,239,226,0.55);border:1px solid rgba(31,107,126,0.18);border-radius:18px;padding:1.6rem 1.75rem;margin:1.4rem auto;max-width:960px}',
+    'body[data-pojobs] .po-jbs-rc .po-jbs-c-row,body[data-pojobs] .po-jbs-rc .po-jbs-chips{display:flex;flex-wrap:wrap;gap:.55rem .85rem;margin-bottom:1.1rem;align-items:center}',
+    'body[data-pojobs] .po-jbs-c{display:inline-flex!important;align-items:center;gap:.4rem;background:#fff;border:1px solid rgba(31,107,126,0.28);color:#1F6B7E;border-radius:999px;padding:.4rem .85rem;font-size:.85rem;font-weight:500;line-height:1.2;white-space:nowrap}',
+    'body[data-pojobs] .po-jbs-c b,body[data-pojobs] .po-jbs-c strong{font-weight:600;opacity:.7;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;margin-right:.15rem}',
+    'body[data-pojobs] .po-jbs-c.dl{background:rgba(31,107,126,0.08);font-weight:600}',
+    'html[data-theme="dark"] body[data-pojobs] .po-jbs-rc{background:rgba(23,29,44,0.55);border-color:rgba(245,236,210,0.16)}',
+    'html[data-theme="dark"] body[data-pojobs] .po-jbs-c{background:rgba(245,236,210,0.06);border-color:rgba(245,236,210,0.22);color:#f5ecd2}',
+    'html[data-theme="dark"] body[data-pojobs] .po-jbs-c.dl{background:rgba(31,107,126,0.22);color:#f5ecd2}'
+  ].join('');
+  document.head.appendChild(s);
+
+  /* Wrap chips in a flex row if they aren't already, so the gap CSS bites */
+  function wrapChips(){
+    var chips = document.querySelectorAll('body[data-pojobs] .po-jbs-c');
+    if (!chips.length) return;
+    var first = chips[0];
+    var parent = first.parentElement;
+    if (!parent) return;
+    if (parent.classList.contains('po-jbs-c-row')) return;
+    /* If all chips share a parent, just add the class to that parent */
+    var same = Array.from(chips).every(function(c){ return c.parentElement === parent; });
+    if (same) {
+      parent.classList.add('po-jbs-c-row');
+    } else {
+      /* Otherwise wrap in a fresh row before the first chip */
+      var row = document.createElement('div');
+      row.className = 'po-jbs-c-row';
+      first.parentElement.insertBefore(row, first);
+      chips.forEach(function(c){ row.appendChild(c); });
+    }
+  }
+  wrapChips();
+  [200, 600, 1500].forEach(function(t){ setTimeout(wrapChips, t); });
+})();
+
+/* Block B: kicker as page link (site-wide) */
+(function(){
+  if (document.querySelector('style[data-po="kicker-link-v1"]')) return;
+
+  /* Map kicker text → destination. Lowercased keys. Add new entries here. */
+  var KICKER_LINKS = {
+    'open roles': '/about/jobs#open-roles',
+    'open role':  '/about/jobs#open-roles',
+    'about pain ontario': '/about',
+    'who we are': '/about',
+    'our work': '/advocacy',
+    'advocacy': '/advocacy',
+    'in the news': '/news-updates',
+    'news': '/news-updates',
+    'resources': '/resources',
+    'find a resource': '/resources',
+    'support our work': '/support',
+    'donate': '/support',
+    'get in touch': '/contact',
+    'contact us': '/contact',
+    'by audience': '/by-audience'
+  };
+
+  /* CSS — small uppercase, brand-coloured, link-styled */
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'kicker-link-v1');
+  s.textContent = [
+    '.kicker[data-po-link],a.kicker,a .kicker,.po-kicker[data-po-link]{cursor:pointer;text-decoration:none;color:#1F6B7E;letter-spacing:.08em;text-transform:uppercase;font-weight:600;display:inline-flex;align-items:center;gap:.4rem;border-radius:6px;padding:.1rem .15rem;transition:color .15s ease, background .15s ease, transform .15s ease}',
+    '.kicker[data-po-link]:hover,a.kicker:hover .kicker,a:hover>.kicker,.po-kicker[data-po-link]:hover{color:#155a6c;background:rgba(31,107,126,0.06);transform:translateX(2px)}',
+    '.kicker[data-po-link]:focus-visible,.po-kicker[data-po-link]:focus-visible{outline:2px solid #1F6B7E;outline-offset:2px}',
+    '.kicker[data-po-link]::after,.po-kicker[data-po-link]::after{content:" \\2192";font-size:.85em;opacity:.6;transition:transform .15s ease, opacity .15s ease}',
+    '.kicker[data-po-link]:hover::after,.po-kicker[data-po-link]:hover::after{opacity:1;transform:translateX(2px)}',
+    'html[data-theme="dark"] .kicker[data-po-link],html[data-theme="dark"] .po-kicker[data-po-link]{color:#9bd6e8}',
+    'html[data-theme="dark"] .kicker[data-po-link]:hover,html[data-theme="dark"] .po-kicker[data-po-link]:hover{color:#c5e7f1;background:rgba(155,214,232,0.08)}',
+    '@media (prefers-reduced-motion: reduce){.kicker[data-po-link],.kicker[data-po-link]::after{transition:none!important;transform:none!important}.kicker[data-po-link]:hover{transform:none!important}.kicker[data-po-link]:hover::after{transform:none!important}}'
+  ].join('');
+  document.head.appendChild(s);
+
+  function wireKickers(){
+    var kickers = document.querySelectorAll('.kicker, .po-kicker');
+    kickers.forEach(function(k){
+      if (k.dataset.poLinkWired) return;
+      /* If already inside an <a>, leave it alone */
+      if (k.closest('a')) { k.dataset.poLinkWired = '1'; return; }
+      /* Resolve destination: explicit data-href wins, then text-map lookup */
+      var dest = k.getAttribute('data-href') || k.getAttribute('data-link-to') || '';
+      if (!dest) {
+        var t = (k.textContent || '').replace(/\s+/g,' ').trim().toLowerCase();
+        dest = KICKER_LINKS[t] || '';
+      }
+      if (!dest) { k.dataset.poLinkWired = '1'; return; }
+      k.setAttribute('data-po-link', '');
+      k.setAttribute('role', 'link');
+      k.setAttribute('tabindex', '0');
+      k.style.cursor = 'pointer';
+      k.addEventListener('click', function(e){
+        if (e.target.closest('a')) return;
+        location.href = dest;
+      });
+      k.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          location.href = dest;
+        }
+      });
+      k.dataset.poLinkWired = '1';
+    });
+  }
+  wireKickers();
+  [250, 800, 2000].forEach(function(t){ setTimeout(wireKickers, t); });
+
+  /* Re-run when CMS lists or page sections render later */
+  if (window.MutationObserver) {
+    var debounceTimer = null;
+    var mo = new MutationObserver(function(){
+      if (debounceTimer) return;
+      debounceTimer = setTimeout(function(){
+        debounceTimer = null;
+        wireKickers();
+      }, 150);
+    });
+    /* Observe ONLY <main> if present, fall back to body. attributes:false to keep cost low. */
+    var target = document.querySelector('main') || document.body;
+    mo.observe(target, { childList: true, subtree: true });
+  }
+})();
