@@ -302,9 +302,10 @@ go();
   /* Sequential script loader — each script's onload fires the next one,
      so modules arrive in order and coordinate via cmscore. */
   var queue = [];
+  /* cmsload MUST be first — it creates the list instance in cmscore.listInstances. cmsfilter and cmssort then EXTEND that instance. If they bootstrap before cmsload binds, they have no list to attach to (filtersData stays empty). */
+  if (needsLoad)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
   if (needsFilter) queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
   if (needsSort)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
-  if (needsLoad)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
 
   function next(){
     var src = queue.shift();
