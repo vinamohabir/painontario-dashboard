@@ -1218,18 +1218,21 @@ label[for="res-sort"] {
 #resources-controls > .wrap {
   display: block !important;
   width: 100% !important;
-  max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  max-width: 1320px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-inline: clamp(20px, 4vw, 40px) !important;
+  box-sizing: border-box !important;
 }
 
 #resources-results-wrap {
   display: block !important;
   width: 100% !important;
-  max-width: none !important;
+  max-width: 1320px !important;
   margin: 24px auto 0 !important;
-  padding: 0 !important;
+  padding: 0 clamp(20px, 4vw, 40px) !important;
   grid-column: 1 / -1 !important;
+  box-sizing: border-box !important;
 }
 
 /* Hide the redundant hardcoded "Active filters: Clear all" UI block —
