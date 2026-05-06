@@ -257,46 +257,62 @@ go();
 
 /* --- v2 additions: chip-strip restore + kicker-as-link --- */
 
-/* Block A: chip-strip CSS restore (for /about/jobs role card) */
+/* Block A: full role-card CSS restore (chip strip + role card + equity band + hiring process timeline + 2-col responsibilities/profile with checkmark bullets) */
 (function(){
   if (!/\/about\/jobs/.test(location.pathname)) return;
-  if (document.querySelector('style[data-po="chipsv2-restore"]')) return;
+  if (document.querySelector('style[data-po="rolecard-full-v1"]')) return;
   var s = document.createElement('style');
-  s.setAttribute('data-po', 'chipsv2-restore');
+  s.setAttribute('data-po', 'rolecard-full-v1');
   s.textContent = [
-    'body[data-pojobs] .po-jbs-rc{background:rgba(245,239,226,0.55);border:1px solid rgba(31,107,126,0.18);border-radius:18px;padding:1.6rem 1.75rem;margin:1.4rem auto;max-width:960px}',
-    'body[data-pojobs] .po-jbs-rc .po-jbs-c-row,body[data-pojobs] .po-jbs-rc .po-jbs-chips{display:flex;flex-wrap:wrap;gap:.55rem .85rem;margin-bottom:1.1rem;align-items:center}',
-    'body[data-pojobs] .po-jbs-c{display:inline-flex!important;align-items:center;gap:.4rem;background:#fff;border:1px solid rgba(31,107,126,0.28);color:#1F6B7E;border-radius:999px;padding:.4rem .85rem;font-size:.85rem;font-weight:500;line-height:1.2;white-space:nowrap}',
-    'body[data-pojobs] .po-jbs-c b,body[data-pojobs] .po-jbs-c strong{font-weight:600;opacity:.7;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;margin-right:.15rem}',
-    'body[data-pojobs] .po-jbs-c.dl{background:rgba(31,107,126,0.08);font-weight:600}',
-    'html[data-theme="dark"] body[data-pojobs] .po-jbs-rc{background:rgba(23,29,44,0.55);border-color:rgba(245,236,210,0.16)}',
-    'html[data-theme="dark"] body[data-pojobs] .po-jbs-c{background:rgba(245,236,210,0.06);border-color:rgba(245,236,210,0.22);color:#f5ecd2}',
-    'html[data-theme="dark"] body[data-pojobs] .po-jbs-c.dl{background:rgba(31,107,126,0.22);color:#f5ecd2}'
+    /* chip strip */
+    '.po-jbs{display:flex;flex-wrap:wrap;gap:8px;margin:18px auto 26px;max-width:1180px;padding:14px 18px;background:#EFEDE3;border-radius:20px;border:1px solid rgba(31,41,51,.08)}',
+    '.po-jbs-c{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;color:#1F2933;font:500 13px/1.3 "Inter Tight",sans-serif;border-radius:999px;border:1px solid rgba(31,41,51,.08)}',
+    '.po-jbs-c strong{color:#1F6B7E}',
+    '.po-jbs-c.dl{background:#1F6B7E;color:#fff;border-color:#17576A}',
+    '.po-jbs-c.dl strong{color:#fff}',
+    'html[data-theme="dark"] .po-jbs{background:#171d2c;border-color:#3a4258}',
+    'html[data-theme="dark"] .po-jbs-c{background:#1f2638;color:#f5ecd2;border-color:#3a4258}',
+    'html[data-theme="dark"] .po-jbs-c strong{color:#b6d6c8}',
+    'html[data-theme="dark"] .po-jbs-c.dl{background:#b6d6c8;color:#0e1320;border-color:#b6d6c8}',
+    'html[data-theme="dark"] .po-jbs-c.dl strong{color:#0e1320}',
+    /* role card */
+    '.po-jbs-rc{margin:18px auto 32px;max-width:1180px;padding:28px 32px;border-radius:24px;border:1px solid rgba(31,41,51,.12);background:#FBFAF3;display:flex;flex-direction:column;gap:12px;align-items:flex-start}',
+    '.po-jbs-rc .eb{font:600 12px/1 sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#1F6B7E!important;margin:0}',
+    '.po-jbs-rc h3{font:500 1.7rem/1.15 Fraunces,serif;margin:0;color:#1F2933!important}',
+    '.po-jbs-rc p{margin:0;font-size:16px;line-height:1.55;color:#1F2933!important;max-width:780px}',
+    '.po-jbs-rc a{color:#1F6B7E!important;font-weight:600}',
+    'html[data-theme="dark"] .po-jbs-rc{background:#171d2c;border-color:#3a4258}',
+    'html[data-theme="dark"] .po-jbs-rc .eb,html[data-theme="dark"] .po-jbs-rc a{color:#c8e3d5!important}',
+    'html[data-theme="dark"] .po-jbs-rc h3,html[data-theme="dark"] .po-jbs-rc p{color:#f5ecd2!important}',
+    /* equity band */
+    '.po-jbs-eq{margin:32px auto;max-width:1180px;padding:28px;background:linear-gradient(180deg,#E8E2CC,#F2EDDC);border-radius:24px;border:1px solid rgba(31,41,51,.08)}',
+    '.po-jbs-eq h3{font:500 1.4rem/1.2 Fraunces,Georgia,serif;margin:0 0 12px;color:#1F2933}',
+    '.po-jbs-eq p{font-size:16px;line-height:1.6;color:#1F2933;margin:0 0 12px;max-width:780px}',
+    '.po-jbs-eq p:last-child{margin:0}',
+    '.po-jbs-eq a{color:#1F6B7E;font-weight:600}',
+    'html[data-theme="dark"] .po-jbs-eq{background:#171d2c;border-color:#3a4258}',
+    'html[data-theme="dark"] .po-jbs-eq h3,html[data-theme="dark"] .po-jbs-eq p{color:#f5ecd2}',
+    'html[data-theme="dark"] .po-jbs-eq a{color:#c8e3d5}',
+    /* hiring process timeline */
+    '.po-jbs-pr{margin:32px auto;max-width:1180px}',
+    '.po-jbs-pr h3{font:500 1.4rem/1.2 Fraunces,serif;margin:0 0 18px;color:inherit}',
+    '.po-jbs-pr ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,1fr);counter-reset:step;position:relative}',
+    '.po-jbs-pr ol::before{content:"";position:absolute;top:18px;left:8%;right:8%;height:2px;background:currentColor;opacity:.2}',
+    '.po-jbs-pr li{position:relative;padding:48px 8px 0;text-align:center;font-size:13px;line-height:1.4;opacity:.75;counter-increment:step}',
+    '.po-jbs-pr li::before{content:counter(step);position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;background:transparent;border:2px solid currentColor;font-weight:700;line-height:32px;opacity:.85}',
+    '.po-jbs-pr li b{display:block;color:inherit;font-size:14px;margin-bottom:4px}',
+    '@media(max-width:720px){.po-jbs-pr ol{grid-template-columns:1fr}.po-jbs-pr ol::before{display:none}.po-jbs-pr li{padding:0 0 8px 52px;text-align:left}.po-jbs-pr li::before{left:0;transform:none;top:2px}}',
+    /* 2-col responsibilities / profile with checkmarks */
+    '.po-jbs-rs{margin:32px auto;max-width:1180px;padding:28px;border-top:3px solid #1F6B7E;color:#1F2933!important}',
+    '.po-jbs-rs .kk{font:600 12px/1 sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1F6B7E!important;margin:0 0 8px}',
+    '.po-jbs-rs h3{font:500 1.5rem/1.2 Fraunces,serif;margin:0 0 20px;color:#1F2933!important}',
+    '.po-jbs-rs ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 32px}',
+    '.po-jbs-rs li{position:relative;padding:0 0 0 26px;font-size:16px;line-height:1.5;color:#1F2933!important}',
+    '.po-jbs-rs li:before{content:"\\2713";position:absolute;left:0;top:0;color:#1F6B7E!important;font-weight:700}',
+    'html[data-theme="dark"] .po-jbs-rs,html[data-theme="dark"] .po-jbs-rs h3,html[data-theme="dark"] .po-jbs-rs li{color:#f5ecd2!important;border-color:#b6d6c8}',
+    'html[data-theme="dark"] .po-jbs-rs .kk,html[data-theme="dark"] .po-jbs-rs li:before{color:#b6d6c8!important}'
   ].join('');
   document.head.appendChild(s);
-
-  /* Wrap chips in a flex row if they aren't already, so the gap CSS bites */
-  function wrapChips(){
-    var chips = document.querySelectorAll('body[data-pojobs] .po-jbs-c');
-    if (!chips.length) return;
-    var first = chips[0];
-    var parent = first.parentElement;
-    if (!parent) return;
-    if (parent.classList.contains('po-jbs-c-row')) return;
-    /* If all chips share a parent, just add the class to that parent */
-    var same = Array.from(chips).every(function(c){ return c.parentElement === parent; });
-    if (same) {
-      parent.classList.add('po-jbs-c-row');
-    } else {
-      /* Otherwise wrap in a fresh row before the first chip */
-      var row = document.createElement('div');
-      row.className = 'po-jbs-c-row';
-      first.parentElement.insertBefore(row, first);
-      chips.forEach(function(c){ row.appendChild(c); });
-    }
-  }
-  wrapChips();
-  [200, 600, 1500].forEach(function(t){ setTimeout(wrapChips, t); });
 })();
 
 /* Block B: kicker as page link (site-wide) */
