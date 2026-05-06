@@ -406,14 +406,21 @@ go();
   document.head.appendChild(s);
 })();
 
-/* Block B: kicker as page link (site-wide) */
+/* Block B: kicker as page link (site-wide) — refactored 2026-05-06
+   Replaces kicker-link-v1 + kicker-link-fix-v1. Kickers now become
+   real <a href> anchors (SEO, screen-reader "link" announcement,
+   right-click "open in new tab", middle/Cmd/Ctrl-click). Smooth
+   in-page scroll preserved for same-path #hash destinations. */
 (function(){
-  if (document.querySelector('style[data-po="kicker-link-v1"]')) return;
+  if (document.querySelector('style[data-po="kicker-href-v1"]')) return;
 
-  /* Map kicker text → destination. Lowercased keys. Add new entries here. */
+  /* Map kicker text -> destination. Lowercased keys.
+     "open roles" / "open role" point at /about/jobs#po-apply
+     (the H2 set by footer block 08), incorporating the
+     kicker-link-fix-v1 override into the source map. */
   var KICKER_LINKS = {
-    'open roles': '/about/jobs#open-roles',
-    'open role':  '/about/jobs#open-roles',
+    'open roles': '/about/jobs#po-apply',
+    'open role':  '/about/jobs#po-apply',
     'about pain ontario': '/about',
     'who we are': '/about',
     'our work': '/advocacy',
@@ -429,65 +436,136 @@ go();
     'by audience': '/by-audience'
   };
 
-  /* CSS — small uppercase, brand-coloured, link-styled */
+  /* CSS — selectors target .kicker / a.kicker / .po-kicker so the
+     refactored <a class="kicker"> picks up identical styling. */
   var s = document.createElement('style');
-  s.setAttribute('data-po', 'kicker-link-v1');
+  s.setAttribute('data-po', 'kicker-href-v1');
   s.textContent = [
-    'html .kicker[data-po-link],html a.kicker,html a .kicker,html .po-kicker[data-po-link]{cursor:pointer!important;text-decoration:none!important;color:#1F6B7E!important;letter-spacing:.08em!important;text-transform:uppercase!important;font-weight:600!important;display:inline-flex!important;align-items:center!important;gap:.4rem!important;border-radius:6px!important;padding:.1rem .15rem!important;transition:color .15s ease, background .15s ease, transform .15s ease!important}',
-    'html .kicker[data-po-link]:hover,html a.kicker:hover .kicker,html a:hover>.kicker,html .po-kicker[data-po-link]:hover{color:#155a6c!important;background:rgba(31,107,126,0.06)!important;transform:translateX(2px)!important}',
-    'html .kicker[data-po-link]:focus-visible,html .po-kicker[data-po-link]:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important}',
-    'html .kicker[data-po-link]::after,html .po-kicker[data-po-link]::after{content:" \\2192"!important;font-size:.85em!important;opacity:.6!important;transition:transform .15s ease, opacity .15s ease!important}',
-    'html .kicker[data-po-link]:hover::after,html .po-kicker[data-po-link]:hover::after{opacity:1!important;transform:translateX(2px)!important}',
-    'html[data-theme="dark"] .kicker[data-po-link],html[data-theme="dark"] .po-kicker[data-po-link]{color:#9bd6e8!important}',
-    'html[data-theme="dark"] .kicker[data-po-link]:hover,html[data-theme="dark"] .po-kicker[data-po-link]:hover{color:#c5e7f1!important;background:rgba(155,214,232,0.08)!important}',
-    '@media (prefers-reduced-motion: reduce){.kicker[data-po-link],.kicker[data-po-link]::after{transition:none!important;transform:none!important}.kicker[data-po-link]:hover{transform:none!important}.kicker[data-po-link]:hover::after{transform:none!important}}'
+    'html a.kicker,html a.po-kicker,html .kicker[data-po-link],html .po-kicker[data-po-link]{cursor:pointer!important;text-decoration:none!important;color:#1F6B7E!important;letter-spacing:.08em!important;text-transform:uppercase!important;font-weight:600!important;display:inline-flex!important;align-items:center!important;gap:.4rem!important;border-radius:6px!important;padding:.1rem .15rem!important;transition:color .15s ease, background .15s ease, transform .15s ease!important}',
+    'html a.kicker:hover,html a.po-kicker:hover,html .kicker[data-po-link]:hover,html .po-kicker[data-po-link]:hover{color:#155a6c!important;background:rgba(31,107,126,0.06)!important;transform:translateX(2px)!important}',
+    'html a.kicker:focus-visible,html a.po-kicker:focus-visible,html .kicker[data-po-link]:focus-visible,html .po-kicker[data-po-link]:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important}',
+    'html a.kicker::after,html a.po-kicker::after,html .kicker[data-po-link]::after,html .po-kicker[data-po-link]::after{content:" \\2192"!important;font-size:.85em!important;opacity:.6!important;transition:transform .15s ease, opacity .15s ease!important}',
+    'html a.kicker:hover::after,html a.po-kicker:hover::after,html .kicker[data-po-link]:hover::after,html .po-kicker[data-po-link]:hover::after{opacity:1!important;transform:translateX(2px)!important}',
+    'html[data-theme="dark"] a.kicker,html[data-theme="dark"] a.po-kicker,html[data-theme="dark"] .kicker[data-po-link],html[data-theme="dark"] .po-kicker[data-po-link]{color:#9bd6e8!important}',
+    'html[data-theme="dark"] a.kicker:hover,html[data-theme="dark"] a.po-kicker:hover,html[data-theme="dark"] .kicker[data-po-link]:hover,html[data-theme="dark"] .po-kicker[data-po-link]:hover{color:#c5e7f1!important;background:rgba(155,214,232,0.08)!important}',
+    '@media (prefers-reduced-motion: reduce){a.kicker,a.po-kicker,.kicker[data-po-link],.po-kicker[data-po-link],a.kicker::after,a.po-kicker::after,.kicker[data-po-link]::after,.po-kicker[data-po-link]::after{transition:none!important;transform:none!important}a.kicker:hover,a.po-kicker:hover,.kicker[data-po-link]:hover,.po-kicker[data-po-link]:hover{transform:none!important}a.kicker:hover::after,a.po-kicker:hover::after,.kicker[data-po-link]:hover::after,.po-kicker[data-po-link]:hover::after{transform:none!important}}'
   ].join('');
   document.head.appendChild(s);
 
-  function wireKickers(){
-    var kickers = document.querySelectorAll('.kicker, .po-kicker');
-    kickers.forEach(function(k){
-      if (k.dataset.poLinkWired) return;
-      /* If already inside an <a>, leave it alone */
-      if (k.closest('a')) { k.dataset.poLinkWired = '1'; return; }
-      /* Resolve destination: explicit data-href wins, then text-map lookup */
-      var dest = k.getAttribute('data-href') || k.getAttribute('data-link-to') || '';
-      if (!dest) {
-        var t = (k.textContent || '').replace(/\s+/g,' ').trim().toLowerCase();
-        dest = KICKER_LINKS[t] || '';
+  function curPath(){
+    return (location.pathname || '/').replace(/\/+$/, '') || '/';
+  }
+
+  function resolveDest(node){
+    var explicit = node.getAttribute('data-href') || node.getAttribute('data-link-to') || '';
+    if (explicit) return explicit;
+    var t = (node.textContent || '').replace(/\s+/g,' ').trim().toLowerCase();
+    return KICKER_LINKS[t] || '';
+  }
+
+  /* Smooth-scroll handler shared between cases. Bound on the <a>
+     itself so middle/Cmd/Ctrl-click still let the browser open
+     the destination in a new tab. */
+  function attachSmoothScroll(anchor, dest){
+    if (anchor.dataset.poKickerHrefBound === '1') return;
+    anchor.dataset.poKickerHrefBound = '1';
+    anchor.addEventListener('click', function(e){
+      if (e.defaultPrevented) return;
+      if (e.button && e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      var hashIdx = dest.indexOf('#');
+      var destPath = hashIdx === -1 ? dest : dest.slice(0, hashIdx);
+      var destHash = hashIdx === -1 ? '' : dest.slice(hashIdx);
+      var samePath = curPath() === destPath.replace(/\/+$/, '');
+      if (!samePath || !destHash) return;
+
+      var target = document.querySelector(destHash);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (history && history.replaceState) {
+        history.replaceState(null, '', destHash);
       }
-      if (!dest) { k.dataset.poLinkWired = '1'; return; }
-      k.setAttribute('data-po-link', '');
-      k.setAttribute('role', 'link');
-      k.setAttribute('tabindex', '0');
-      k.style.cursor = 'pointer';
-      k.addEventListener('click', function(e){
-        if (e.target.closest('a')) return;
-        location.href = dest;
-      });
-      k.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          location.href = dest;
-        }
-      });
-      k.dataset.poLinkWired = '1';
     });
   }
-  wireKickers();
-  [250, 800, 2000].forEach(function(t){ setTimeout(wireKickers, t); });
 
-  /* Re-run when CMS lists or page sections render later */
+  function wrapKicker(k){
+    if (k.dataset.poKickerHref === '1') return null;
+
+    var dest = resolveDest(k);
+    if (!dest) { k.dataset.poKickerHref = '1'; return null; }
+
+    var hashIdx = dest.indexOf('#');
+    var destPath = hashIdx === -1 ? dest : dest.slice(0, hashIdx);
+    var destHash = hashIdx === -1 ? '' : dest.slice(hashIdx);
+    var samePath = curPath() === destPath.replace(/\/+$/, '');
+    /* Self-skip: already at destination AND no hash to scroll to */
+    if (samePath && !destHash) {
+      k.removeAttribute('data-po-link');
+      k.removeAttribute('role');
+      k.removeAttribute('tabindex');
+      k.style.cursor = '';
+      k.dataset.poKickerHref = '1';
+      return null;
+    }
+
+    /* Already inside an <a>? Use the existing anchor. */
+    var parentA = k.closest('a');
+    if (parentA) {
+      if (!parentA.getAttribute('href')) {
+        parentA.setAttribute('href', dest);
+      }
+      attachSmoothScroll(parentA, dest);
+      k.dataset.poKickerHref = '1';
+      return parentA;
+    }
+
+    /* Build a real <a> carrying the kicker's classes/attrs/children. */
+    var a = document.createElement('a');
+    a.setAttribute('href', dest);
+
+    var i, attrs = k.attributes;
+    for (i = 0; i < attrs.length; i++) {
+      var name = attrs[i].name;
+      var value = attrs[i].value;
+      if (name === 'href') continue;
+      if (name === 'role') continue;     /* <a> is implicit */
+      if (name === 'tabindex') continue; /* <a href> is focusable */
+      a.setAttribute(name, value);
+    }
+    while (k.firstChild) {
+      a.appendChild(k.firstChild);
+    }
+    a.dataset.poKickerHref = '1';
+
+    if (k.parentNode) {
+      k.parentNode.replaceChild(a, k);
+    }
+    attachSmoothScroll(a, dest);
+    return a;
+  }
+
+  function sweep(){
+    var nodes = document.querySelectorAll('.kicker, .po-kicker');
+    Array.prototype.forEach.call(nodes, function(k){
+      if (k.dataset.poKickerHref === '1') return;
+      wrapKicker(k);
+    });
+  }
+
+  sweep();
+  [250, 800, 2000, 4000].forEach(function(t){ setTimeout(sweep, t); });
+
   if (window.MutationObserver) {
     var debounceTimer = null;
     var mo = new MutationObserver(function(){
       if (debounceTimer) return;
       debounceTimer = setTimeout(function(){
         debounceTimer = null;
-        wireKickers();
+        sweep();
       }, 150);
     });
-    /* Observe ONLY <main> if present, fall back to body. attributes:false to keep cost low. */
     var target = document.querySelector('main') || document.body;
     mo.observe(target, { childList: true, subtree: true });
   }
@@ -1350,107 +1428,14 @@ label[for="res-sort"] {
    ============================================================ */
 
 /* ------------------------------------------------------------
-   Block 1 — kicker "Open roles" → /about/jobs#po-apply
+   Block 1 — kicker "Open roles" override
    ------------------------------------------------------------
-   Fixes site.js KICKER_LINKS pointing at #open-roles (no element
-   exists) — should target #po-apply (the apply H2 set by footer
-   block 08). Also: when current path already starts with
-   /about/jobs, scroll smoothly to the #po-apply section instead
-   of full navigation, and skip wiring entirely if dest path ===
-   current path AND there's no hash to scroll to.
-   Runs site-wide (no path gate) so it patches every kicker.
+   REMOVED 2026-05-06. The "open roles" → /about/jobs#po-apply
+   override and same-path smooth-scroll behaviour now live in the
+   refactored kicker-href-v1 block above (Block B). That block
+   produces real <a href> anchors in the source map directly, so
+   no later override is needed.
    ------------------------------------------------------------ */
-(function () {
-  if (document.querySelector('style[data-po="kicker-link-fix-v1"]')) return;
-  var marker = document.createElement('style');
-  marker.setAttribute('data-po', 'kicker-link-fix-v1');
-  marker.textContent = '/* kicker-link-fix-v1 active */';
-  document.head.appendChild(marker);
-
-  var FIX_MAP = {
-    'open roles': '/about/jobs#po-apply',
-    'open role':  '/about/jobs#po-apply'
-  };
-
-  function curPath() {
-    return (location.pathname || '/').replace(/\/+$/, '') || '/';
-  }
-
-  function rewireOne(k) {
-    if (k.dataset.poKickerFixed === '1') return;
-    var t = (k.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-    var dest = FIX_MAP[t];
-    if (!dest) return;
-
-    /* Parse dest into path + hash */
-    var hashIdx = dest.indexOf('#');
-    var destPath = hashIdx === -1 ? dest : dest.slice(0, hashIdx);
-    var destHash = hashIdx === -1 ? '' : dest.slice(hashIdx);
-    var samePath = curPath() === destPath.replace(/\/+$/, '');
-
-    /* Self-skip: already at destination AND no hash to scroll to */
-    if (samePath && !destHash) {
-      k.removeAttribute('data-po-link');
-      k.removeAttribute('role');
-      k.removeAttribute('tabindex');
-      k.style.cursor = '';
-      k.dataset.poKickerFixed = '1';
-      return;
-    }
-
-    /* Override the existing click + keydown by cloning the node
-       (drops all bound listeners installed by kicker-link-v1) and
-       re-wiring with the corrected destination. */
-    var clone = k.cloneNode(true);
-    clone.setAttribute('data-po-link', '');
-    clone.setAttribute('role', 'link');
-    clone.setAttribute('tabindex', '0');
-    clone.style.cursor = 'pointer';
-    clone.dataset.poKickerFixed = '1';
-
-    function go(e) {
-      if (e && e.target && e.target.closest && e.target.closest('a')) return;
-      if (samePath && destHash) {
-        /* Smooth-scroll on same page rather than reloading. */
-        var target = document.querySelector(destHash);
-        if (target) {
-          if (e && e.preventDefault) e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          if (history && history.replaceState) {
-            history.replaceState(null, '', destHash);
-          }
-          return;
-        }
-      }
-      location.href = dest;
-    }
-    clone.addEventListener('click', go);
-    clone.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        go(e);
-      }
-    });
-    if (k.parentNode) k.parentNode.replaceChild(clone, k);
-  }
-
-  function sweep() {
-    var nodes = document.querySelectorAll('.kicker, .po-kicker');
-    Array.prototype.forEach.call(nodes, rewireOne);
-  }
-  sweep();
-  /* Catch later kicker-link-v1 wiring passes at 250/800/2000ms */
-  [300, 900, 2100, 4000].forEach(function (ms) { setTimeout(sweep, ms); });
-
-  if (window.MutationObserver) {
-    var t = null;
-    var mo = new MutationObserver(function () {
-      if (t) return;
-      t = setTimeout(function () { t = null; sweep(); }, 200);
-    });
-    mo.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
-  }
-})();
 
 /* ------------------------------------------------------------
    Block 2 — equity-band v2 dataset guard (/about/jobs only)
