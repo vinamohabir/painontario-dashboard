@@ -419,3 +419,799 @@ go();
     mo.observe(target, { childList: true, subtree: true });
   }
 })();
+
+/* === Page-level migrations (from per-page Custom Code, 2026-05-05) === */
+
+/* /advocacy: recent advocacy news-list cards */
+(function(){
+  if (location.pathname !== '/advocacy' && !/^\/advocacy\b/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="advocacy-news-list"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'advocacy-news-list');
+  s.textContent = `/* ===== Recent advocacy cards (mpp page only) ===== */
+
+  /* Container: clean vertical stack of cards */
+  .news-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 24px 0 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+  }
+  @media (max-width: 720px) {
+    .news-list {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  .news-item {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FBFAF3 !important;
+    border: 1px solid rgba(23, 87, 106, 0.16) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease !important;
+  }
+
+  .news-item:hover {
+    transform: translateY(-3px) !important;
+    border-color: rgba(23, 87, 106, 0.40) !important;
+    box-shadow: 0 14px 32px -22px rgba(23, 87, 106, 0.45) !important;
+  }
+
+  /* The whole li is a single link */
+  .news-item > a {
+    display: grid !important;
+    grid-template-rows: auto 1fr auto !important;
+    gap: 14px !important;
+    padding: 24px 26px 22px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    height: 100% !important;
+  }
+
+  /* Date eyebrow at top */
+  .news-item .date {
+    display: inline-block !important;
+    font-family: "Inter Tight", sans-serif !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: rgba(23, 87, 106, 0.78) !important;
+    font-weight: 600 !important;
+  }
+
+  /* Title block (the unstyled div between .date and the arrow) */
+  .news-item > a > div {
+    font-family: "Fraunces", serif !important;
+    font-size: 1.4rem !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.01em !important;
+    color: #17576A !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+  }
+  .news-item > a > div * {
+    font-family: inherit !important;
+    color: inherit !important;
+  }
+
+  /* Subtitle / kicker paragraph inside the title block */
+  .news-item > a > div p,
+  .news-item > a > div span {
+    display: block !important;
+    font-family: "Inter Tight", sans-serif !important;
+    font-size: 0.95rem !important;
+    line-height: 1.45 !important;
+    color: rgba(23, 87, 106, 0.72) !important;
+    font-weight: 400 !important;
+    margin-top: 6px !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  /* Arrow at bottom — anchored bottom-right of card */
+  .news-item [aria-hidden="true"] {
+    justify-self: end !important;
+    align-self: end !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: #17576A !important;
+    color: #FBFAF3 !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    transition: background-color 220ms ease, transform 220ms ease !important;
+  }
+
+  .news-item:hover [aria-hidden="true"] {
+    background: #6FC2D7 !important;
+    color: #17576A !important;
+    transform: translateX(2px) !important;
+  }`;
+  document.head.appendChild(s);
+})();
+
+/* /contact: textarea + placeholder polish */
+(function(){
+  if (!/^\/contact\b/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="contact-textarea-polish"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'contact-textarea-polish');
+  s.textContent = `textarea{
+resize:none;
+}
+  ::placeholder {
+  	transition: all 350ms ease;
+  }
+  
+  .your-input-class:focus::placeholder {
+  	transform: translate(20px, 0);
+    opacity: 0.0;
+  }
+  
+  .your-textarea-class:focus::placeholder {
+  	transform: translate(20px, 0);
+    opacity: 0.0;
+  }`;
+  document.head.appendChild(s);
+})();
+
+/* /contact: wrap/form layout */
+(function(){
+  if (!/^\/contact\b/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="contact-wrap-layout"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'contact-wrap-layout');
+  s.textContent = `@media (min-width: 992px) {
+  body[data-pocontact] .div-block-21.wrap,
+  body[data-pocontact] .wrap:has(form[data-name="Contact"]) {
+    max-width: 960px !important;
+    width: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  body[data-pocontact] .w-form:has(form[data-name="Contact"]) {
+    max-width: none;
+  }
+}
+body[data-pocontact] form[data-name="Contact"] ~ .w-form-done,
+body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail {
+  border-radius: 14px;
+  padding: 1.25rem 1.4rem;
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+body[data-pocontact] form[data-name="Contact"] ~ .w-form-done {
+  background: rgba(120, 188, 156, 0.16);
+  border: 1px solid rgba(120, 188, 156, 0.45);
+  color: var(--brand-cream, #f5efe2);
+}
+body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail {
+  background: rgba(220, 120, 120, 0.16);
+  border: 1px solid rgba(220, 120, 120, 0.45);
+  color: var(--brand-cream, #f5efe2);
+}
+body[data-pocontact] #feedback,
+body[data-pocontact] .po-feedback-section,
+body[data-pocontact] .po-feedback-link {
+  display: none !important;
+}`;
+  document.head.appendChild(s);
+})();
+
+/* /contact: data-pocontact body marker + page logic */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+  document.body.setAttribute('data-pocontact', '');
+  var DONE = "Thanks — message received. We will be in touch when we can. If it is urgent, please also email info@painontario.ca.";
+  var FAIL = "That did not send. Please try again, or email us directly at info@painontario.ca.";
+  var TOPIC_OPTIONS = [
+    { v: "", l: "Select one…" },
+    { v: "General question or inquiry", l: "General question or inquiry" },
+    { v: "Accessibility issue", l: "Accessibility issue" },
+    { v: "Feature suggestion", l: "Feature suggestion" },
+    { v: "A resource we should add", l: "A resource we should add" },
+    { v: "Media or partnership", l: "Media or partnership" },
+    { v: "Volunteering or contributing", l: "Volunteering or contributing" },
+    { v: "Something else", l: "Something else" }
+  ];
+  function setupTopic() {
+    var sel = document.querySelector('#topic');
+    if (!sel || sel.dataset.poInit) return;
+    sel.dataset.poInit = '1';
+    sel.setAttribute('name', 'Topic');
+    sel.innerHTML = '';
+    TOPIC_OPTIONS.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.value = o.v;
+      opt.textContent = o.l;
+      sel.appendChild(opt);
+    });
+  }
+  function patchMessages() {
+    var cf = document.querySelector('form[data-name=\"Contact\"]');
+    if (!cf) return;
+    var w = cf.closest('.w-form');
+    if (!w) return;
+    var d = w.querySelector('.w-form-done > div, .w-form-done');
+    var f = w.querySelector('.w-form-fail > div, .w-form-fail');
+    if (d && d.textContent.trim() !== DONE) d.textContent = DONE;
+    if (f && f.textContent.trim() !== FAIL) f.textContent = FAIL;
+  }
+  function tick() {
+    setupTopic();
+    patchMessages();
+  }
+  tick();
+  new MutationObserver(tick).observe(document.body, { childList: true, subtree: true });
+})();
+
+/* /resource-library/*: filter UI styling */
+(function(){
+  if (!/^\/resource-library\b/.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="resources-filter-ui"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'resources-filter-ui');
+  s.textContent = `/* Hide the actual checkbox visually but keep accessible */
+.chip > input,
+.chip .w-checkbox-input,
+.chip .w-form-formcheckbox,
+.chip .w-checkbox {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* Hide Webflow's default form labels inside chips */
+.chip .w-form-label,
+.chip [id="resource-tag"] { display: none !important; }
+
+/* Default chip — soft brand outline */
+.chip {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+.chip:hover { border-color: rgba(111, 194, 215, 0.8) !important; background: rgba(111, 194, 215, 0.10) !important; }
+.chip:focus-within { outline: 2px solid #1F6B7E; outline-offset: 2px; }
+
+/* Active checked chip — brand sky-midnight, cream text */
+.chip:has(input:checked) {
+  background: #17576A !important;
+  color: #FFFCF7 !important;
+  border-color: #17576A !important;
+}
+.chip:has(input:checked):hover { background: #0F4756 !important; border-color: #0F4756 !important; }
+
+/* Active filters summary panel */
+.active-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 14px 0 6px;
+  font-family: "Inter Tight", sans-serif;
+  font-size: 14px;
+}
+.active-pills:empty { display: none; }
+.active-pills .label {
+  font-weight: 600;
+  color: #5B6E7F;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+  margin-right: 4px;
+}
+.active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(111, 194, 215, 0.18);
+  color: #17576A;
+  padding: 4px 10px 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.active-pill button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #17576A;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 2px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: background 140ms ease;
+}
+.active-pill button:hover,
+.active-pill button:focus-visible {
+  background: rgba(23, 87, 106, 0.18);
+  outline: none;
+}
+.active-pills .clear-all {
+  margin-left: auto;
+  color: #8C5E37;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.active-pills .clear-all:hover,
+.active-pills .clear-all:focus-visible {
+  color: #1F2933;
+  outline: none;
+}
+
+/* Result count */
+.res-count-line {
+  font-family: "Inter Tight", sans-serif;
+  font-size: 13px;
+  color: #6B7280;
+  margin: 6px 0 16px;
+  letter-spacing: 0.02em;
+}
+
+/* Empty state */
+#resources-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #5B6E7F;
+}
+
+/* Hide stale custom load-more */
+#res-load-more { display: none !important; }
+
+/* Hide Finsweet helper text inside cards */
+.fs-hidden { display: none !important; }
+
+/* Hide Webflow's built-in pagination if present */
+.resources-grid .w-pagination-wrapper { display: none !important; }
+
+/* Sort label + dropdown inline */
+*:has(> label[for="res-sort"]):has(> #res-sort) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin: 16px 0 24px !important;
+}
+label[for="res-sort"] {
+  display: inline-block !important;
+  margin: 0 !important;
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #1F2933 !important;
+  flex-shrink: 0 !important;
+}
+#res-sort {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: 220px !important;
+  max-width: 320px !important;
+  margin: 0 !important;
+
+  /* v8: brand-styled select chrome instead of native browser default */
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #FBFAF3 !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2317576A' d='M6 8 0 0h12z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px 8px !important;
+  border: 1px solid rgba(23, 87, 106, 0.30) !important;
+  border-radius: 10px !important;
+  padding: 10px 38px 10px 14px !important;
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 14px !important;
+  color: #17576A !important;
+  cursor: pointer !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease !important;
+}
+#res-sort:hover {
+  border-color: rgba(23, 87, 106, 0.55) !important;
+}
+#res-sort:focus,
+#res-sort:focus-visible {
+  outline: none !important;
+  border-color: #17576A !important;
+  box-shadow: 0 0 0 3px rgba(111, 194, 215, 0.30) !important;
+}
+
+/* ====================================================================
+   v5 — Force 2-col grid on the INNER <ul class="w-dyn-items"> only.
+   Real DOM:
+     #resources-grid  (.w-dyn-list, outer wrapper)
+       ├─ ul.w-dyn-items.collection-list   ← THIS becomes the grid
+       │    └─ li.w-dyn-item
+       │         └─ div.resource-card      ← contains everything
+       └─ div.w-dyn-empty                  ← hidden when items exist
+   ==================================================================== */
+
+/* Outer wrapper stays a normal block (was incorrectly grid'd in v4) */
+#resources-grid,
+.resources-grid {
+  display: block !important;
+}
+
+/* The actual list becomes the responsive grid */
+#resources-grid .w-dyn-items,
+.resources-grid .w-dyn-items {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  width: 100% !important;
+}
+@media (max-width: 720px) {
+  #resources-grid .w-dyn-items,
+  .resources-grid .w-dyn-items {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Each .w-dyn-item collection item: v9 force display: block so the card
+   fills width naturally. Webflow's default flex-row was causing gap math
+   that left the card narrower than its slot. */
+#resources-grid .w-dyn-items > .w-dyn-item,
+.resources-grid .w-dyn-items > .w-dyn-item {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  list-style: none !important;
+}
+
+/* .resource-card is the actual card chrome — fills its wrapper, equal-height.
+   v9: max-width: none added (Designer had set 500px, which capped width).
+   v9: removed gap from card flex; using explicit margins on children for
+       cleaner control over the badge spacing. */
+.resources-grid .resource-card,
+#resources-grid .resource-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  background: #FBFAF3 !important;
+  border: 1px solid rgba(23, 87, 106, 0.16) !important;
+  border-radius: 14px !important;
+  padding: 24px 26px 22px !important;
+  gap: 12px !important;
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease !important;
+}
+
+.resources-grid .resource-card:hover,
+#resources-grid .resource-card:hover {
+  border-color: rgba(23, 87, 106, 0.40) !important;
+  box-shadow: 0 14px 32px -22px rgba(23, 87, 106, 0.45) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Defensive: clear any inner-block chrome that Designer may have applied
+   (so we don't end up with a card-inside-a-card visual) */
+.resources-grid .resource-card .card-summary,
+.resources-grid .resource-card .card-summary > * {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* v9: drop the margin-top: auto trick that was pushing the badge BELOW
+   the card edge in non-fixed-height columns. Use only the card flex gap
+   (12px) plus a small extra margin on .card-badges for visual breathing
+   room between the link and the format chip. Equal-height across rows
+   still works via grid align-items: stretch + card height: 100%. */
+.resources-grid .resource-card .card-link {
+  margin-top: 4px !important;
+}
+.resources-grid .resource-card .card-badges {
+  margin-top: 4px !important;
+}
+
+/* Webflow's empty-state block must not occupy width when present */
+#resources-grid .w-dyn-empty,
+.resources-grid .w-dyn-empty {
+  grid-column: 1 / -1;
+  width: 100% !important;
+}
+
+/* ====================================================================
+   v7 — Force #resources-results-wrap to full content width.
+   The Designer restructure left the grid + sort + pills in a sibling
+   .wrap inside #resources-controls. That parent appears to constrain
+   children to half-width via inherited flex/grid. Reset and span.
+   ==================================================================== */
+
+#resources-controls {
+  display: block !important;
+}
+#resources-controls > .wrap {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#resources-results-wrap {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 24px auto 0 !important;
+  padding: 0 !important;
+  grid-column: 1 / -1 !important;
+}
+
+/* Hide the redundant hardcoded "Active filters: Clear all" UI block —
+   the v5 JS already renders an active-pills row with its own clear-all
+   link inside #resources-results-wrap > .active-pills. */
+[data-legacy-pills="true"] {
+  display: none !important;
+}`;
+  document.head.appendChild(s);
+})();
+
+/* /resource-library/*: filter labels + chip wiring + counts */
+(function () {
+  'use strict';
+
+  var LABELS = {
+    audience: { 'lived-living-experience': 'Person with lived experience', 'caregiver': 'Caregiver', 'parent': 'Parent', 'healthcare': 'Healthcare provider', 'policymaker': 'Policymaker', 'changemaker': 'Changemaker' },
+    format: { 'virtual-platform': 'Virtual Platform', 'virtual-course': 'Virtual Course', 'clinic-service': 'Clinic / Service', 'standard-guideline': 'Standard / Guideline', 'support-group': 'Support group', 'helpline': 'Helpline', 'pdf': 'PDF', 'organization': 'Organization', 'articles': 'Articles', 'video': 'Video', 'podcast': 'Podcast', 'mobile-app': 'Mobile App', 'report': 'Report' },
+    age: { 'all-ages': 'All ages', 'infants': 'Infants (0–2)', 'children': 'Children (3–12)', 'adolescents': 'Adolescents (13–17)', 'young-adults': 'Young adults (18–25)', 'adults': 'Adults (26–64)', 'older-adults': 'Older adults (65+)' },
+    region: { 'ontario-wide': 'Ontario-wide', 'national': 'National', 'toronto-gta': 'Toronto / GTA', 'hamilton': 'Hamilton', 'ottawa': 'Ottawa', 'london-sw': 'London / SW ON', 'kingston-se': 'Kingston / SE ON', 'thunder-bay-nw': 'Thunder Bay / NW ON', 'sudbury-ne': 'Sudbury / NE ON' }
+  };
+
+  function pretty(group, value) {
+    return (LABELS[group] && LABELS[group][value]) || value.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+
+  function init() {
+    var grid = document.getElementById('resources-grid');
+    if (!grid) return;
+
+    var search = document.getElementById('res-search');
+    var clearBtn = document.getElementById('res-clear');
+    var count = document.getElementById('res-count');
+    var empty = document.getElementById('resources-empty');
+    var sort = document.getElementById('res-sort');
+    var pillsHost = document.querySelector('.active-pills') || document.getElementById('active-pills');
+
+    var state = {
+      audience: new Set(), format: new Set(), age: new Set(), region: new Set(),
+      search: '', sort: 'name-asc'
+    };
+
+    function getCards() {
+      return Array.prototype.slice.call(grid.querySelectorAll('.resource-card'));
+    }
+    function wrapperOf(card) { return card.closest('.w-dyn-item') || card; }
+
+    function fieldText(card, fieldName) {
+      var el = card.querySelector('[fs-cmsfilter-field="' + fieldName + '"]');
+      if (el) return (el.textContent || '').trim().toLowerCase();
+      var attr = card.getAttribute('data-' + fieldName);
+      return (attr || '').trim().toLowerCase();
+    }
+
+    function matchGroup(text, set) {
+      if (!set || set.size === 0) return true;
+      var hit = false;
+      set.forEach(function (v) { if (text.indexOf(v.toLowerCase()) !== -1) hit = true; });
+      return hit;
+    }
+
+    function sortKey(card) {
+      switch (state.sort) {
+        case 'recent':
+          return card.getAttribute('data-added') || card.getAttribute('data-recent') || '';
+        case 'source':
+          return fieldText(card, 'source') || (card.querySelector('.source-org, [data-source-organization]') ? (card.querySelector('.source-org, [data-source-organization]').textContent || '').trim().toLowerCase() : '');
+        case 'name-asc':
+        default:
+          return fieldText(card, 'name') || (card.querySelector('h3') ? (card.querySelector('h3').textContent || '').trim().toLowerCase() : '');
+      }
+    }
+
+    function applySort() {
+      var cards = getCards();
+      cards.sort(function (a, b) {
+        var ka = sortKey(a), kb = sortKey(b);
+        if (state.sort === 'recent') return kb.localeCompare(ka);
+        if (state.sort === 'name-desc') return kb.localeCompare(ka);
+        return ka.localeCompare(kb);
+      });
+      /* v15: physically reorder DOM (appendChild moves existing nodes).
+         The CSS `order` property approach in v14 didn't visibly reorder
+         items in the grid container — DOM reorder is bulletproof. */
+      var listContainer = cards[0] && wrapperOf(cards[0]).parentNode;
+      if (listContainer) {
+        cards.forEach(function (c) { listContainer.appendChild(wrapperOf(c)); });
+      }
+    }
+
+    function renderActivePills() {
+      if (!pillsHost) return;
+      var hasAny = state.search || ['audience','format','age','region'].some(function (k) { return state[k].size > 0; });
+      pillsHost.innerHTML = '';
+      if (!hasAny) return;
+
+      var label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = 'Active filters';
+      pillsHost.appendChild(label);
+
+      function pill(group, value, displayText) {
+        var p = document.createElement('span');
+        p.className = 'active-pill';
+        p.textContent = displayText;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Remove filter ' + displayText);
+        btn.textContent = '×';
+        btn.addEventListener('click', function () {
+          if (group === 'search') {
+            if (search) search.value = '';
+            state.search = '';
+          } else if (state[group]) {
+            state[group].delete(value);
+            var cb = document.querySelector('.chip input[type="checkbox"][name="' + group + '"][value="' + value + '"]');
+            if (cb) cb.checked = false;
+          }
+          applyFilters();
+        });
+        p.appendChild(btn);
+        pillsHost.appendChild(p);
+      }
+
+      ['audience','format','age','region'].forEach(function (group) {
+        state[group].forEach(function (val) { pill(group, val, pretty(group, val)); });
+      });
+      if (state.search) pill('search', '', 'Search: ' + state.search);
+
+      var clr = document.createElement('button');
+      clr.type = 'button';
+      clr.className = 'clear-all';
+      clr.textContent = 'Clear all';
+      clr.addEventListener('click', function () { resetAll(); });
+      pillsHost.appendChild(clr);
+    }
+
+    function resetAll() {
+      document.querySelectorAll('.chip input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+      if (search) search.value = '';
+      ['audience','format','age','region'].forEach(function (k) { state[k].clear(); });
+      state.search = '';
+      applyFilters();
+    }
+
+    function applyFilters() {
+      var cards = getCards();
+      var visible = 0;
+      cards.forEach(function (card) {
+        var ok = true;
+        if (ok && !matchGroup(fieldText(card, 'audience'), state.audience)) ok = false;
+        if (ok && !matchGroup(fieldText(card, 'format'),   state.format))   ok = false;
+        if (ok && !matchGroup(fieldText(card, 'age'),      state.age))      ok = false;
+        if (ok && !matchGroup(fieldText(card, 'region'),   state.region))   ok = false;
+        if (ok && state.search) {
+          var hay = fieldText(card, 'name') + ' ' + fieldText(card, 'source');
+          if (hay.indexOf(state.search) === -1) ok = false;
+        }
+        wrapperOf(card).style.display = ok ? '' : 'none';
+        if (ok) visible++;
+      });
+      if (count) count.textContent = String(visible);
+      if (empty) empty.style.display = (visible === 0) ? '' : 'none';
+      renderActivePills();
+      applySort();
+    }
+
+    function bindChips() {
+      document.querySelectorAll('.chip').forEach(function (chip) {
+        if (chip._poChipBound) return;
+        chip._poChipBound = true;
+        chip.addEventListener('click', function (e) {
+          var input = chip.querySelector('input[type="checkbox"]');
+          if (!input) return;
+          if (e.target === input) return;
+          e.preventDefault();
+          input.checked = !input.checked;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+      document.querySelectorAll('.chip input[type="checkbox"]').forEach(function (cb) {
+        if (cb._poBound) return;
+        cb._poBound = true;
+        cb.addEventListener('change', function () {
+          var group = cb.name, val = cb.value;
+          if (!state[group]) return;
+          if (cb.checked) state[group].add(val);
+          else state[group].delete(val);
+          applyFilters();
+        });
+      });
+    }
+
+    bindChips();
+
+    if (search) {
+      var t;
+      search.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(function () {
+          state.search = search.value.trim().toLowerCase();
+          applyFilters();
+        }, 120);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        resetAll();
+      });
+    }
+
+    if (sort) {
+      sort.addEventListener('change', function () {
+        state.sort = sort.value || 'name-asc';
+        applySort();
+      });
+    }
+
+    applyFilters();
+
+    /* v12: re-bind chips and re-apply filters after Finsweet cmsload
+       finishes fetching pages 2+ into the DOM. Without this hook, items
+       past page 1 (101+) would be in the DOM but invisible to our JS. */
+    window.fsAttributes = window.fsAttributes || [];
+    window.fsAttributes.push(['cmsload', function () {
+      bindChips();
+      applyFilters();
+    }]);
+  }
+
+  if (document.readyState !== 'loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
+})();
