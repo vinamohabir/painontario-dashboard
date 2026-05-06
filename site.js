@@ -486,22 +486,22 @@ go();
     /* Underline — applies to ALL top-level items (links + dropdown toggles) */
     TOP.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;background:currentColor;transform:scaleX(0);transform-origin:center;transition:transform .2s ease;border-radius:2px;pointer-events:none}',
 
-    /* Hover state — light mode sky brand */
-    TOP_H + '{color:#1F6B7E!important}',
-    TOP_H.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transform:scaleX(1)}',
+    /* Hover state — light mode sky brand. Bumped specificity with html body. */
+    TOP_H.split(',').map(function(sel){return 'html body ' + sel.trim().replace(/^html\s+/,'');}).join(',') + '{color:#1F6B7E!important;font-weight:600!important}',
+    TOP_H.split(',').map(function(sel){return 'html body ' + sel.trim().replace(/^html\s+/,'') + '::after';}).join(',') + '{transform:scaleX(1)!important;height:3px!important;bottom:4px!important}',
 
     /* Active state — same treatment */
-    TOP_C + '{color:#1F6B7E!important}',
-    TOP_C.split(',').map(function(sel){return sel.trim() + '::after';}).join(',') + '{transform:scaleX(1)!important;background:currentColor!important}',
+    TOP_C.split(',').map(function(sel){return 'html body ' + sel.trim().replace(/^html\s+/,'');}).join(',') + '{color:#1F6B7E!important;font-weight:600!important}',
+    TOP_C.split(',').map(function(sel){return 'html body ' + sel.trim().replace(/^html\s+/,'') + '::after';}).join(',') + '{transform:scaleX(1)!important;background:currentColor!important;height:3px!important;bottom:4px!important}',
 
     /* Dropdown sub-items — subtle pill-fill hover (no underline) */
     'html .w-dropdown-link::after{display:none!important}',
     'html .w-dropdown-link:hover{color:#1F6B7E!important;background-color:rgba(31,107,126,0.08)!important}',
 
-    /* Dark mode — brighter teal #9bd6e8 */
-    'html[data-theme="dark"] .nav-link-7:hover,html[data-theme="dark"] .w-nav-link:hover,html[data-theme="dark"] .w-dropdown-toggle:hover{color:#9bd6e8!important}',
-    'html[data-theme="dark"] .nav-link-7.w--current,html[data-theme="dark"] .w-nav-link.w--current,html[data-theme="dark"] .w-dropdown-toggle[data-po-nav-current="1"]{color:#9bd6e8!important}',
-    'html[data-theme="dark"] .w-dropdown-link:hover{color:#c5e7f1!important;background-color:rgba(155,214,232,0.10)!important}',
+    /* Dark mode — vivid peach #f6c1a3 (very distinct from cream default, survives Force Dark) */
+    'html[data-theme="dark"] body .nav-link-7:hover,html[data-theme="dark"] body .w-nav-link:hover,html[data-theme="dark"] body .w-dropdown-toggle:hover{color:#f6c1a3!important;font-weight:600!important}',
+    'html[data-theme="dark"] body .nav-link-7.w--current,html[data-theme="dark"] body .w-nav-link.w--current,html[data-theme="dark"] body .w-dropdown-toggle[data-po-nav-current="1"]{color:#f6c1a3!important;font-weight:600!important}',
+    'html[data-theme="dark"] body .w-dropdown-link:hover{color:#f6c1a3!important;background-color:rgba(246,193,163,0.10)!important}',
 
     /* Focus-visible — 2px brand outline */
     'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-toggle:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
