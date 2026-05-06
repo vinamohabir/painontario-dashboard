@@ -2993,3 +2993,50 @@ sweep();
   document.head.appendChild(s);
 })();
 
+/* navdarkdots-v1 — sage + warm dot cluster in dark-mode navbar (PO motif). */
+(function(){
+  if(document.querySelector('style[data-po="navdarkdots-v1"]'))return;
+  var css = [
+    '.po-nav-dots{',
+      'position:absolute;right:10rem;top:50%;transform:translateY(-50%);',
+      'display:none;align-items:center;gap:.55rem;',
+      'pointer-events:none;z-index:1;',
+    '}',
+    '@media(min-width:992px){html[data-theme="dark"] .po-nav-dots{display:flex}}',
+    '.po-nav-dots span{',
+      'display:block;width:.42rem;height:.42rem;border-radius:50%;',
+      'opacity:.78;',
+    '}',
+    '.po-nav-dots .d-sage{background:#78bc9c}',
+    '.po-nav-dots .d-sage-soft{background:#b5d9c5}',
+    '.po-nav-dots .d-warm{background:#bf8a60}',
+    /* Slightly larger right-edge breathing room to host the dots */
+    '@media(min-width:992px){html[data-theme="dark"] .navbar{position:relative}}'
+  ].join('');
+  var s = document.createElement('style');
+  s.setAttribute('data-po','navdarkdots-v1');
+  s.textContent = css;
+  document.head.appendChild(s);
+
+  function place(){
+    var navs = document.querySelectorAll('.navbar');
+    navs.forEach(function(nav){
+      if(nav.querySelector('.po-nav-dots'))return;
+      var d = document.createElement('div');
+      d.className = 'po-nav-dots';
+      d.setAttribute('aria-hidden','true');
+      d.innerHTML = '<span class="d-sage"></span>'
+                  + '<span class="d-warm"></span>'
+                  + '<span class="d-sage-soft"></span>'
+                  + '<span class="d-sage"></span>'
+                  + '<span class="d-warm"></span>';
+      nav.appendChild(d);
+    });
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', place);
+  }else{ place(); }
+  setTimeout(place, 300);
+  setTimeout(place, 1500);
+})();
+
