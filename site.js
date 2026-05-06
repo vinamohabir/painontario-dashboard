@@ -1261,3 +1261,46 @@ label[for="res-sort"] {
   if (document.readyState !== 'loading') init();
   else document.addEventListener('DOMContentLoaded', init);
 })();
+
+
+/* === Theme gap-fill v1 (2026-05-05) — fix in-between mode glitches.
+   Overrides selectors that lose the cascade to `!important` shorthand,
+   redefines cream-tinted custom props inside dark theme so any
+   var(--white)/var(--bg-mist)/var(--bg-base) flip automatically. === */
+!function(){
+  if (document.querySelector('style[data-po="themegapfillv1"]')) return;
+  var css = [
+    'html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-image:none!important;border-color:var(--po-border)!important}',
+    '@media screen and (max-width:479px){html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-image:none!important}}',
+    'html[data-theme="dark"] .w-nav .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown-list.w--open,html[data-theme="dark"] .w-nav .w-dropdown[aria-expanded="true"] .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown:hover .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown:focus-within .w-dropdown-list{background:var(--po-bg2)!important;border:1px solid var(--po-border)!important;color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .w-nav .w-dropdown-list a,html[data-theme="dark"] .w-nav .w-dropdown-list .w-dropdown-link{color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .w-nav .w-dropdown-list a:hover{background-color:var(--po-bg3)!important;color:var(--po-link)!important}',
+    'html[data-theme="dark"] .signpost.crisis-card{background:var(--po-bg3)!important;border:1px solid var(--po-warn)!important;border-top:4px solid var(--po-warn)!important}',
+    'html[data-theme="dark"] footer .crisis-line,html[data-theme="dark"] .footer .crisis-line{background:var(--po-bg3)!important;border:1px solid var(--po-border)!important;border-left:4px solid var(--po-warn)!important;color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .news-item,html[data-theme="dark"] li.news-item{background:var(--po-bg2)!important;border:1px solid var(--po-border)!important}',
+    'html[data-theme="dark"] .white-bg{background-color:var(--po-bg2)!important}',
+    'html[data-theme="dark"] .white{color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .blue-section{background-color:var(--po-bg3)!important;color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .black-section{background-color:#080c14!important;color:var(--po-fg)!important}',
+    'html[data-theme="dark"] ::-webkit-scrollbar-thumb{background-color:var(--po-bg3)!important;border-radius:8px}',
+    'html[data-theme="dark"] ::-webkit-scrollbar-track{background-color:var(--po-bg)!important}',
+    'html[data-theme="dark"] .button.secondary .button__icon-block{border-color:var(--po-fg)!important}',
+    'html[data-theme="dark"] .button.secondary:hover .button__icon-block{background-color:var(--po-fg)!important;color:var(--po-bg)!important}',
+    'html[data-theme="dark"] .button:hover .button__icon-block{background-color:var(--po-accent)!important;color:var(--po-bg)!important}',
+    'html[data-theme="dark"] a.btn-primary,html[data-theme="dark"] .btn-primary{background:var(--po-accent)!important;color:#0e1320!important;border-color:var(--po-accent)!important}',
+    'html[data-theme="dark"] a.btn-primary:hover,html[data-theme="dark"] a.btn-primary:focus-visible,html[data-theme="dark"] .btn-primary:hover,html[data-theme="dark"] .btn-primary:focus-visible{background:#c8e3d5!important;border-color:#c8e3d5!important;color:#0e1320!important}',
+    'html[data-theme="dark"] .btn-primary *{color:#0e1320!important}',
+    'html[data-theme="dark"] .signpost .tag,html[data-theme="dark"] .signpost p.small{background:var(--po-bg3)!important;color:var(--po-fg)!important;border:1px solid var(--po-border)!important}',
+    'html[data-theme="dark"] .signpost.crisis-card .tag{background:var(--po-warn)!important;color:#0e1320!important;border-color:var(--po-warn)!important}',
+    'html[data-theme="dark"] .signpost ul li a{color:var(--po-link)!important}',
+    'html[data-theme="dark"] .signpost.crisis-card ul li a{color:var(--po-warn)!important;text-decoration:underline}',
+    'html[data-theme="dark"] .signpost p,html[data-theme="dark"] .signpost p.small{color:var(--po-fg-muted)!important}',
+    'html[data-theme="dark"] body[data-pocontact] form[data-name="Contact"] ~ .w-form-done{background:rgba(120,188,156,0.10)!important;border:1px solid rgba(120,188,156,0.35)!important;color:var(--po-fg)!important}',
+    'html[data-theme="dark"] body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{background:rgba(220,120,120,0.10)!important;border:1px solid rgba(220,120,120,0.35)!important;color:var(--po-warn)!important}',
+    'html[data-theme="dark"]{--white:var(--po-bg2)!important;--bg-mist:var(--po-bg3)!important;--bg-base:var(--po-bg)!important;--bg-soft:var(--po-bg2)!important;--hero-top:var(--po-bg)!important;--hero-bot:var(--po-bg2)!important;--line:var(--po-border)!important}'
+  ].join('');
+  var s = document.createElement('style');
+  s.setAttribute('data-po','themegapfillv1');
+  s.textContent = css;
+  document.head.appendChild(s);
+}();
