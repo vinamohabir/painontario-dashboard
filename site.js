@@ -380,7 +380,9 @@ go();
       if (keep && q) {
         keep = it._poFilterTextBlob.indexOf(q) !== -1;
       }
-      it.style.display = keep ? '' : 'none';
+      /* Use class instead of inline display:none — the grid rule is
+         display:block !important, so inline style alone won't win. */
+      it.classList.toggle('po-filter-hidden', !keep);
       if (keep) visible++;
     });
     var counter = document.querySelector('#res-count');
@@ -1123,6 +1125,11 @@ label[for="res-sort"] {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Filter-hidden items: must beat the grid's display:block !important rule. */
+#resources-grid .w-dyn-items > .w-dyn-item.po-filter-hidden,
+.resources-grid .w-dyn-items > .w-dyn-item.po-filter-hidden,
+.w-dyn-item.po-filter-hidden { display: none !important; }
 
 /* Each .w-dyn-item collection item: v9 force display: block so the card
    fills width naturally. Webflow's default flex-row was causing gap math
