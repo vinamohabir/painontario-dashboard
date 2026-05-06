@@ -282,40 +282,35 @@ go();
 })();
 
 
-/* Block 0: Finsweet cmsfilter + cmssort loader. cmsload (pagination) was already loaded by an App-applied script. cmsfilter loaded too late for cmsload's auto-init, so we explicitly re-init after the script lands. */
+/* Block 0: Finsweet cmsfilter + cmssort loader. Uses the documented fsAttributes queue pattern. The queue MUST be set up before any Finsweet script loads, so this block runs early in site.js and trusts the queue to dispatch when modules arrive. No destroy() — that wipes cmscore.listInstances and breaks ALL Finsweet modules. */
 (function(){
   if (window.__poFinsweetLoaded) return;
   var needsFilter = !!document.querySelector('[fs-cmsfilter-element], [fs-cmsfilter-field]');
   var needsSort   = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
   if (!needsFilter && !needsSort) return;
   window.__poFinsweetLoaded = true;
-  window.fsAttributes = window.fsAttributes || [];
 
-  function load(src, onload){
-    if (document.querySelector('script[src="' + src + '"]')) { onload && onload(); return; }
+  /* Initialize the queue if it hasn't been already. If it's already an
+     object (Finsweet bootstrap already replaced the array), leave it. */
+  if (!window.fsAttributes) window.fsAttributes = [];
+
+  /* Push registration intent. When the cmsfilter/cmssort script lands,
+     it processes the queue and triggers init. This is the supported
+     init mechanism per Finsweet v1 docs. */
+  if (Array.isArray(window.fsAttributes)) {
+    if (needsFilter) window.fsAttributes.push(['cmsfilter', function(){}]);
+    if (needsSort)   window.fsAttributes.push(['cmssort',   function(){}]);
+  }
+
+  function load(src){
+    if (document.querySelector('script[src="' + src + '"]')) return;
     var s = document.createElement('script');
     s.src = src; s.async = true; s.defer = true;
-    s.onload = onload || null;
     document.head.appendChild(s);
   }
 
-  function reInit(name){
-    var mod = window.fsAttributes && window.fsAttributes[name];
-    if (!mod) return;
-    try { mod.destroy && mod.destroy(); } catch(e){}
-    try { mod.init && mod.init(); } catch(e){}
-  }
-
-  if (needsFilter) {
-    load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js', function(){
-      [50, 300, 900, 2000].forEach(function(d){ setTimeout(function(){ reInit('cmsfilter'); }, d); });
-    });
-  }
-  if (needsSort) {
-    load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js', function(){
-      [50, 300, 900, 2000].forEach(function(d){ setTimeout(function(){ reInit('cmssort'); }, d); });
-    });
-  }
+  if (needsFilter) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
+  if (needsSort)   load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
 })();
 
 
