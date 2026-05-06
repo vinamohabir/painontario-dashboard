@@ -470,6 +470,12 @@ go();
     'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
     'html[data-theme="dark"] .nav-link-7:focus-visible,html[data-theme="dark"] .w-nav-link:focus-visible,html[data-theme="dark"] .w-dropdown-link:focus-visible{outline-color:#9bd6e8!important}',
 
+    /* Replace the existing 8.8px dot indicator on .w--current with the same
+       underline used by hover, so the active state matches the hover treatment. */
+    'html .nav-link-7.w--current::before,html .w-nav-link.w--current::before{display:none!important;content:none!important}',
+    'html .nav-link-7.w--current,html .w-nav-link.w--current{color:#1F6B7E!important}',
+    'html[data-theme="dark"] .nav-link-7.w--current,html[data-theme="dark"] .w-nav-link.w--current{color:#9bd6e8!important}',
+
     /* Reduced-motion: keep color shift, drop the underline grow + transitions */
     '@media (prefers-reduced-motion: reduce){html .nav-link-7,html .w-nav-link,html .w-dropdown-link,html .nav-link-7::after,html .w-nav-link::after{transition:none!important}html .nav-link-7::after,html .w-nav-link::after{transform:scaleX(1);opacity:.5}html .nav-link-7:hover::after,html .w-nav-link:hover::after{opacity:1}}'
   ].join('');
