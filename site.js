@@ -2440,4 +2440,36 @@ sweep();
 !function(){if(!/^\/contact\/?$/i.test(location.pathname))return;var H="https://hook.eu1.make.com/r5zlpjipart2yozo6sikm93iq2w2myi2",T=["","General question or inquiry","Accessibility issue","Feature suggestion","A resource we should add","Media or partnership","Volunteering or contributing","Something else"],q=document.querySelector.bind(document);function st(){var s=q("#topic");if(!s||s.dataset.poI)return;s.dataset.poI="1";s.setAttribute("name","Topic");s.innerHTML="";T.forEach(function(v){var p=document.createElement("option");p.value=v;p.textContent=v||"Select one…";s.appendChild(p)})}function ss(f,s){var w=f.closest(".w-form");if(!w)return;var d=w.querySelector(".w-form-done"),x=w.querySelector(".w-form-fail");"done"===s?(f.style.display="none",d&&(d.style.display="block"),x&&(x.style.display="none")):(x&&(x.style.display="block"),d&&(d.style.display="none"))}function as(){var f=q('form[data-name="Contact"]');if(!f||f.dataset.poS)return;f.dataset.poS="1";f.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation();var b=f.querySelector('input[type=submit],button[type=submit]'),v=b?b.value:null;b&&(b.value=b.getAttribute("data-wait")||"Please wait…",b.disabled=!0);var V=function(s){return(f.querySelector(s)||{}).value||""};fetch(H,{method:"POST",mode:"cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload:{name:"Contact",submittedAt:new Date().toISOString(),pageUrl:location.href,data:{"First-Name":V("#fn"),"Last-Name":V("#ln"),Email:V("#em"),Role:V("#role"),Topic:V("#topic"),Message:V("#msg")}}})}).then(function(r){if(!r.ok)throw 0;ss(f,"done");try{f.reset()}catch(_){}}).catch(function(){ss(f,"fail");b&&(b.value=v||"Send message",b.disabled=!1)})},!0)}function tk(){st();as()}tk();new MutationObserver(tk).observe(document.body,{childList:!0,subtree:!0})}();
 
 /* === pocontactpolishv1 === */
-(function(){if(!/^\/contact\/?$/i.test(location.pathname))return;document.body.setAttribute('data-pocontact','');var s=document.createElement('style');s.textContent='@media(min-width:992px){body[data-pocontact] .div-block-21.wrap{max-width:960px!important;width:auto!important;margin-left:auto!important;margin-right:auto!important}body[data-pocontact] .w-form:has(form[data-name="Contact"]){max-width:none}}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done,body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{border-radius:14px;padding:1.25rem 1.4rem;margin-top:1rem;line-height:1.5}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done{background:rgba(120,188,156,0.16);border:1px solid rgba(120,188,156,0.45);color:var(--brand-cream,#f5efe2)}body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{background:rgba(220,120,120,0.16);border:1px solid rgba(220,120,120,0.45);color:var(--brand-cream,#f5efe2)}';document.head.appendChild(s);var DONE="Thanks — message received. We'll be in touch when we can. If it's urgent, please also email info@painontario.ca.";var FAIL="That didn't send. Please try again, or email us directly at info@painontario.ca.";function p(){var cf=document.querySelector('form[data-name="Contact"]');if(!cf)return;var w=cf.closest('.w-form');if(!w)return;var d=w.querySelector('.w-form-done>div,.w-form-done'),f=w.querySelector('.w-form-fail>div,.w-form-fail');if(d&&d.textContent.trim()!==DONE)d.textContent=DONE;if(f&&f.textContent.trim()!==FAIL)f.textContent=FAIL}p();new MutationObserver(p).observe(document.body,{childList:true,subtree:true});})();
+/* === pocontactpolishv1 — safe variant (no body-wide MutationObserver)
+   Replaces the original 1.6 KB version. Same CSS + same message
+   override texts. Drops the body-wide childList+subtree observer
+   that was freezing the /contact renderer when combined with the
+   other observers added in the audit-driven patches.
+   Retries the text-set on a few setTimeout ticks instead. */
+(function () {
+  if (!/^\/contact\/?$/i.test(location.pathname)) return;
+  if (document.body.hasAttribute('data-pocontact')) return;
+  document.body.setAttribute('data-pocontact', '');
+
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'pocontactpolish-safe-v1');
+  s.textContent = '@media(min-width:992px){body[data-pocontact] .div-block-21.wrap{max-width:960px!important;width:auto!important;margin-left:auto!important;margin-right:auto!important}body[data-pocontact] .w-form:has(form[data-name="Contact"]){max-width:none}}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done,body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{border-radius:14px;padding:1.25rem 1.4rem;margin-top:1rem;line-height:1.5}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done{background:rgba(120,188,156,0.16);border:1px solid rgba(120,188,156,0.45);color:var(--brand-cream,#f5efe2)}body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{background:rgba(220,120,120,0.16);border:1px solid rgba(220,120,120,0.45);color:var(--brand-cream,#f5efe2)}';
+  document.head.appendChild(s);
+
+  var DONE = "Thanks — message received. We'll be in touch when we can. If it's urgent, please also email info@painontario.ca.";
+  var FAIL = "That didn't send. Please try again, or email us directly at info@painontario.ca.";
+
+  function p() {
+    var cf = document.querySelector('form[data-name="Contact"]');
+    if (!cf) return;
+    var w = cf.closest('.w-form');
+    if (!w) return;
+    var d = w.querySelector('.w-form-done > div, .w-form-done');
+    var f = w.querySelector('.w-form-fail > div, .w-form-fail');
+    if (d && d.textContent.trim() !== DONE) d.textContent = DONE;
+    if (f && f.textContent.trim() !== FAIL) f.textContent = FAIL;
+  }
+  p();
+  [200, 600, 1500, 3500].forEach(function (t) { setTimeout(p, t); });
+})();
+
