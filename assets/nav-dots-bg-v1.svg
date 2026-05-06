@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="96" viewBox="0 0 240 96" preserveAspectRatio="none" aria-hidden="true">
+  <!-- Pain Ontario nav-bar scattered accent dots tile.
+       Tiles seamlessly horizontally (240w) and vertically (96h).
+       Brand palette: sage #b6d6c8, sky #1F6B7E, coral #dc7878, cream #f5efe2.
+       Dots placed off the edges so the tile seam is invisible. -->
+  <g opacity="0.55">
+    <circle cx="14"  cy="22" r="2"   fill="#b6d6c8"/>
+    <circle cx="38"  cy="68" r="1.5" fill="#1F6B7E"/>
+    <circle cx="55"  cy="14" r="2.5" fill="#dc7878"/>
+    <circle cx="72"  cy="44" r="1.5" fill="#b6d6c8"/>
+    <circle cx="92"  cy="78" r="2"   fill="#caa46a"/>
+    <circle cx="108" cy="20" r="1.5" fill="#1F6B7E"/>
+    <circle cx="124" cy="56" r="2.5" fill="#b6d6c8"/>
+    <circle cx="142" cy="12" r="1.5" fill="#dc7878"/>
+    <circle cx="158" cy="40" r="2"   fill="#1F6B7E"/>
+    <circle cx="174" cy="74" r="1.5" fill="#b6d6c8"/>
+    <circle cx="192" cy="26" r="2.5" fill="#caa46a"/>
+    <circle cx="206" cy="60" r="1.5" fill="#dc7878"/>
+    <circle cx="224" cy="18" r="2"   fill="#b6d6c8"/>
+    <circle cx="232" cy="84" r="1.5" fill="#1F6B7E"/>
+    <circle cx="6"   cy="56" r="2"   fill="#dc7878"/>
+    <circle cx="46"  cy="36" r="1"   fill="#1F6B7E"/>
+    <circle cx="86"  cy="58" r="1"   fill="#dc7878"/>
+    <circle cx="118" cy="80" r="1"   fill="#caa46a"/>
+    <circle cx="148" cy="62" r="1"   fill="#b6d6c8"/>
+    <circle cx="178" cy="20" r="1"   fill="#dc7878"/>
+    <circle cx="212" cy="42" r="1"   fill="#1F6B7E"/>
+    <circle cx="28"  cy="48" r="1"   fill="#caa46a"/>
+    <circle cx="62"  cy="84" r="1"   fill="#1F6B7E"/>
+    <circle cx="100" cy="36" r="1"   fill="#dc7878"/>
+    <circle cx="134" cy="80" r="1"   fill="#b6d6c8"/>
+    <circle cx="166" cy="56" r="1"   fill="#caa46a"/>
+    <circle cx="200" cy="80" r="1"   fill="#dc7878"/>
+    <circle cx="220" cy="48" r="1"   fill="#b6d6c8"/>
+  </g>
+</svg>

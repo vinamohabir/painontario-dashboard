@@ -442,6 +442,26 @@ go();
 })();
 
 
+/* Block 0f: nav-dots-bg — scattered accent-dots tile as navbar background.
+   Inline SVG → data URI so no extra HTTP request. Tile is 240×96, seamless. */
+(function(){
+  if (document.querySelector('style[data-po="nav-dots-bg-v1"]')) return;
+  /* SVG kept on one line for valid data: URI — opacity 0.55 in SVG, plus
+     CSS `background-color` keeps the cream/dark base behind the dots. */
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="96" viewBox="0 0 240 96" preserveAspectRatio="none"><g opacity=".55"><circle cx="14" cy="22" r="2" fill="%23b6d6c8"/><circle cx="38" cy="68" r="1.5" fill="%231F6B7E"/><circle cx="55" cy="14" r="2.5" fill="%23dc7878"/><circle cx="72" cy="44" r="1.5" fill="%23b6d6c8"/><circle cx="92" cy="78" r="2" fill="%23caa46a"/><circle cx="108" cy="20" r="1.5" fill="%231F6B7E"/><circle cx="124" cy="56" r="2.5" fill="%23b6d6c8"/><circle cx="142" cy="12" r="1.5" fill="%23dc7878"/><circle cx="158" cy="40" r="2" fill="%231F6B7E"/><circle cx="174" cy="74" r="1.5" fill="%23b6d6c8"/><circle cx="192" cy="26" r="2.5" fill="%23caa46a"/><circle cx="206" cy="60" r="1.5" fill="%23dc7878"/><circle cx="224" cy="18" r="2" fill="%23b6d6c8"/><circle cx="232" cy="84" r="1.5" fill="%231F6B7E"/><circle cx="6" cy="56" r="2" fill="%23dc7878"/><circle cx="46" cy="36" r="1" fill="%231F6B7E"/><circle cx="86" cy="58" r="1" fill="%23dc7878"/><circle cx="118" cy="80" r="1" fill="%23caa46a"/><circle cx="148" cy="62" r="1" fill="%23b6d6c8"/><circle cx="178" cy="20" r="1" fill="%23dc7878"/><circle cx="212" cy="42" r="1" fill="%231F6B7E"/><circle cx="28" cy="48" r="1" fill="%23caa46a"/><circle cx="62" cy="84" r="1" fill="%231F6B7E"/><circle cx="100" cy="36" r="1" fill="%23dc7878"/><circle cx="134" cy="80" r="1" fill="%23b6d6c8"/><circle cx="166" cy="56" r="1" fill="%23caa46a"/><circle cx="200" cy="80" r="1" fill="%23dc7878"/><circle cx="220" cy="48" r="1" fill="%23b6d6c8"/></g></svg>';
+  var url = 'url("data:image/svg+xml;utf8,' + svg + '")';
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'nav-dots-bg-v1');
+  s.textContent = [
+    /* Apply to the most likely nav containers — sticky nav wrap + Webflow .w-nav */
+    'html nav,html header.po-nav,html .navbar,html .w-nav{background-image:' + url + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important}',
+    /* Light-mode keeps cream base; dark-mode keeps dark base — dots stay visible thanks to mixed brand palette. */
+    'html[data-theme="dark"] nav,html[data-theme="dark"] header.po-nav,html[data-theme="dark"] .navbar,html[data-theme="dark"] .w-nav{background-blend-mode:screen!important}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
 /* Block 0e: nav hover — visible accessible color shift + underline grow on
    .nav-link-7 / .w-nav-link / .w-dropdown-link. WCAG AA contrast in both
    modes; focus-visible state for keyboard; prefers-reduced-motion respected. */
