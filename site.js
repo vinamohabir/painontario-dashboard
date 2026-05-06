@@ -467,7 +467,11 @@ go();
     'html[data-theme="dark"] body .navbar.w-nav,html[data-theme="dark"] body nav.w-nav,html[data-theme="dark"] body header.po-nav.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#0e1320!important}',
     /* Hide the legacy hand-built .po-nav-dots strip — the new SVG tile fills the
        navbar so this element is redundant and looks like stray dots after Contact. */
-    'html body .po-nav-dots{display:none!important}'
+    'html body .po-nav-dots{display:none!important}',
+    /* The inner .nav-menu.w-nav-menu has a solid bg that covers the parent's
+       dot tile — make it transparent in both modes so the navbar dots show
+       through across the entire bar. */
+    'html body .navbar.w-nav .nav-menu,html body .navbar.w-nav .w-nav-menu,html body nav.w-nav-menu,html[data-theme="dark"] body nav.w-nav-menu,html[data-theme="dark"] body .navbar.w-nav .nav-menu,html[data-theme="dark"] body .navbar.w-nav .w-nav-menu{background-color:transparent!important;background-image:none!important}'
   ].join('');
   document.head.appendChild(s);
 })();
