@@ -21,8 +21,26 @@
   /* ============================================================
    * CONFIG
    * ============================================================ */
-  var SHEET_CSV = "REPLACE_ME"; /* gviz CSV URL from Vina, e.g.
-     https://docs.google.com/spreadsheets/d/<ID>/gviz/tq?tqx=out:csv&sheet=Inquiries */
+  /* Multi-sheet sources: dashboard-forms.js fetches each sheet, tags each
+     row with a synthetic "Form type" column based on the source label,
+     merges in the browser. No external consolidation script needed.
+     Each entry: { url: gvizCsvUrl, formType: stringLabel }. Add or remove
+     entries here to change the data sources. */
+  var SHEET_SOURCES = [
+    {
+      label: "Contact",
+      url:   "https://docs.google.com/spreadsheets/d/1PXLjxRhTs7YK6agpBoRdgY-kr9f-Zhd4E2aNhPr_hko/gviz/tq?tqx=out:csv&sheet=Sheet1"
+    },
+    {
+      label: "Mailing list",
+      url:   "https://docs.google.com/spreadsheets/d/1R75jrxM72jl5qxxRMkhZaN6epg-n156tkPPHeK28Wlw/gviz/tq?tqx=out:csv&sheet=Sheet1"
+    }
+    /* Site feedback can be added once that pipeline lands.
+       Vina, replace any URL above if the sheet ID rotates. */
+  ];
+
+  /* Backward-compat: if anyone still wants single-sheet mode, this still works. */
+  var SHEET_CSV = null;
 
   var AUTHOR_KEY = "po_dash_author";
   var ROOT_ID = "po-forms-root";
@@ -285,27 +303,82 @@
    * DATA
    * ============================================================ */
   function fetchData() {
-    if (!SHEET_CSV || SHEET_CSV === "REPLACE_ME") {
-      showError("SHEET_CSV not configured. Replace the constant at the top of dashboard-forms.js with the gviz CSV URL.");
-      return;
-    }
     if (typeof Papa === "undefined") return;
 
-    Papa.parse(SHEET_CSV, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: function (res) {
-        STATE.rows = (res && res.data) ? res.data : [];
-        STATE.lastFetch = new Date();
+    /* Single-sheet mode (backward-compat) */
+    if (SHEET_CSV) {
+      Papa.parse(SHEET_CSV, {
+        download: true, header: true, skipEmptyLines: true,
+        complete: function (res) {
+          STATE.rows = (res && res.data) ? res.data : [];
+          STATE.lastFetch = new Date();
+          STATE.error = null; clearError(); render();
+        },
+        error: function (err) {
+          showError("Could not load sheet: " + (err && err.message ? err.message : err));
+        }
+      });
+      return;
+    }
+
+    /* Multi-sheet mode: fetch each source, tag with Form type, merge */
+    if (!SHEET_SOURCES || !SHEET_SOURCES.length) {
+      showError("No sheet sources configured.");
+      return;
+    }
+
+    var pending = SHEET_SOURCES.length;
+    var combined = [];
+    var anyError = null;
+
+    SHEET_SOURCES.forEach(function (src) {
+      Papa.parse(src.url, {
+        download: true, header: true, skipEmptyLines: true,
+        complete: function (res) {
+          var rows = (res && res.data) ? res.data : [];
+          /* Tag each row with the synthetic Form type column unless one is already present */
+          for (var i = 0; i < rows.length; i++) {
+            if (!rows[i]["Form type"] && !rows[i]["FormType"] && !rows[i]["form_type"]) {
+              rows[i]["Form type"] = src.label;
+            }
+            rows[i]["__source"] = src.label;
+          }
+          combined = combined.concat(rows);
+          if (--pending === 0) { afterAll(); }
+        },
+        error: function (err) {
+          anyError = err;
+          if (--pending === 0) { afterAll(); }
+        }
+      });
+    });
+
+    function afterAll() {
+      /* Sort newest first if any row has a Timestamp / timestamp / Submitted column */
+      var dateKey = null;
+      for (var k = 0; k < combined.length && !dateKey; k++) {
+        var row = combined[k];
+        for (var key in row) {
+          if (/timestamp|submitted|date|created/i.test(key)) { dateKey = key; break; }
+        }
+      }
+      if (dateKey) {
+        combined.sort(function (a, b) {
+          var av = new Date(a[dateKey] || 0).getTime() || 0;
+          var bv = new Date(b[dateKey] || 0).getTime() || 0;
+          return bv - av;
+        });
+      }
+      STATE.rows = combined;
+      STATE.lastFetch = new Date();
+      if (combined.length === 0 && anyError) {
+        showError("Could not load any sheet: " + (anyError && anyError.message ? anyError.message : anyError));
+      } else {
         STATE.error = null;
         clearError();
-        render();
-      },
-      error: function (err) {
-        showError("Could not load sheet: " + (err && err.message ? err.message : err));
       }
-    });
+      render();
+    }
   }
 
   function filterRows(rows) {
