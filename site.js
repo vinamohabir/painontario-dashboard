@@ -255,7 +255,32 @@ go();
 /* --- footer block 15 --- */
 !function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;var p=function(){var e=document.querySelector('.po-jbs-eq');if(!e||e.dataset.v==='2')return!1;e.dataset.v='2';e.innerHTML='<h3>Who we want to hear from</h3><p>We\'re especially looking for applications from people with lived and living experience of chronic pain, Indigenous Peoples, Black and other racialized candidates, 2SLGBTQ+ candidates, Disabled candidates, and people from working-class and rural communities.</p><p>If you need an accommodation at any stage, write to <a href="mailto:info@painontario.ca">info@painontario.ca</a> and we\'ll arrange it. You don\'t need to disclose a reason.</p>';return!0};p();[200,500,1000,2000,4000].forEach(function(d){setTimeout(p,d)});var s=document.createElement('style');s.setAttribute('data-po','jobsequityandpillrestylev2');s.textContent='.po-jbs-st{background:#fff!important;color:#1F6B7E!important;border:1.5px solid #1F6B7E!important;font-weight:500!important;padding:.55rem 1.1rem!important;font-size:.95rem!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,0.08)!important;display:inline-flex!important;align-items:center!important;gap:.4rem!important;text-decoration:none!important}.po-jbs-st:hover{background:#1F6B7E!important;color:#fff!important}.po-jbs-st b,.po-jbs-st span,.po-jbs-st small{background:transparent!important;color:inherit!important;opacity:.7!important;font-size:.78em!important;font-weight:400!important;padding:0!important;border-radius:0!important;letter-spacing:normal!important}html[data-theme="dark"] .po-jbs-st{background:rgba(31,107,126,0.15)!important;color:#f5ecd2!important;border-color:#f5ecd2!important}html[data-theme="dark"] .po-jbs-st:hover{background:#f5ecd2!important;color:#171d2c!important}html[data-theme="dark"] .po-jbs-st *{color:inherit!important}';document.head.appendChild(s)}();
 
-/* --- v2 additions: chip-strip restore + kicker-as-link + finsweet cmsfilter/cmssort loader --- */
+/* --- v2 additions: chip-strip restore + kicker-as-link + finsweet cmsfilter/cmssort loader + cross-page prefetch hints --- */
+
+/* Block -1: cross-page prefetch hints. Fires during browser idle so it doesn't compete with critical paint. /about/jobs visitors are likely to browse /resource-library next (Vina, 2026-05-05). */
+(function(){
+  var PREFETCH_MAP = {
+    '/about/jobs': ['/resource-library/all']
+  };
+  var hits = PREFETCH_MAP[location.pathname];
+  if (!hits || !hits.length) return;
+  function fire(){
+    hits.forEach(function(url){
+      if (document.querySelector('link[rel="prefetch"][href="' + url + '"]')) return;
+      var l = document.createElement('link');
+      l.rel  = 'prefetch';
+      l.href = url;
+      l.as   = 'document';
+      document.head.appendChild(l);
+    });
+  }
+  if (window.requestIdleCallback) {
+    requestIdleCallback(fire, { timeout: 2500 });
+  } else {
+    setTimeout(fire, 1200);
+  }
+})();
+
 
 /* Block 0: Finsweet cmsfilter + cmssort loader. cmsload (pagination) was already loaded by an App-applied script. cmsfilter loaded too late for cmsload's auto-init, so we explicitly re-init after the script lands. */
 (function(){
