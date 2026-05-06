@@ -508,10 +508,14 @@ go();
     'html .w-dropdown-link::after{display:none!important}',
     'html .w-dropdown-link:hover{color:#1F6B7E!important;background-color:rgba(31,107,126,0.08)!important}',
 
-    /* Dark mode — vivid peach #f6c1a3 (very distinct from cream default, survives Force Dark) */
-    'html[data-theme="dark"] body .nav-link-7:hover,html[data-theme="dark"] body .w-nav-link:hover,html[data-theme="dark"] body .w-dropdown-toggle:hover{color:#f6c1a3!important;font-weight:600!important}',
-    'html[data-theme="dark"] body .nav-link-7.w--current,html[data-theme="dark"] body .w-nav-link.w--current,html[data-theme="dark"] body .w-dropdown-toggle[data-po-nav-current="1"]{color:#f6c1a3!important;font-weight:600!important}',
-    'html[data-theme="dark"] body .w-dropdown-link:hover{color:#f6c1a3!important;background-color:rgba(246,193,163,0.10)!important}',
+    /* Dark mode — vivid peach #f6c1a3 + translucent background pill so the
+       hover effect is visible even when Force Dark mutes color shifts. */
+    'html[data-theme="dark"] body .nav-link-7:hover,html[data-theme="dark"] body .w-nav-link:hover,html[data-theme="dark"] body .w-dropdown-toggle:hover{color:#f6c1a3!important;font-weight:700!important;background-color:rgba(246,193,163,0.14)!important;border-radius:8px!important}',
+    'html[data-theme="dark"] body .nav-link-7.w--current,html[data-theme="dark"] body .w-nav-link.w--current,html[data-theme="dark"] body .w-dropdown-toggle[data-po-nav-current="1"]{color:#f6c1a3!important;font-weight:700!important;background-color:rgba(246,193,163,0.10)!important;border-radius:8px!important}',
+    'html[data-theme="dark"] body .w-dropdown-link:hover{color:#f6c1a3!important;background-color:rgba(246,193,163,0.14)!important}',
+    /* Light mode — also gets the translucent pill for visual parity */
+    'html body .nav-link-7:hover,html body .w-nav-link:hover,html body .w-dropdown-toggle:hover{background-color:rgba(31,107,126,0.10)!important;border-radius:8px!important}',
+    'html body .nav-link-7.w--current,html body .w-nav-link.w--current,html body .w-dropdown-toggle[data-po-nav-current="1"]{background-color:rgba(31,107,126,0.08)!important;border-radius:8px!important}',
 
     /* Focus-visible — 2px brand outline */
     'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-toggle:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
