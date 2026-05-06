@@ -291,10 +291,36 @@ go();
   if (!needsLoad && !needsFilter && !needsSort) return;
   window.__poFinsweetLoaded = true;
 
-  /* Set up the queue BEFORE any Finsweet script loads. */
+  /* Set up the queue BEFORE any Finsweet script loads. The cmsload
+     callback is the critical part: when cmsload finishes rendering
+     items, we explicitly re-init cmsfilter and cmssort so they
+     ingest the now-rendered per-item field values. Without this
+     hook the load-order fix gets the listInstance bound but
+     filtersData stays unpopulated and chip clicks narrow to 0. */
   if (!window.fsAttributes) window.fsAttributes = [];
+  function reInitFilterAndSort(){
+    try {
+      if (window.fsAttributes && window.fsAttributes.cmsfilter
+          && typeof window.fsAttributes.cmsfilter.init === 'function') {
+        window.fsAttributes.cmsfilter.init();
+      }
+    } catch(e) {}
+    try {
+      if (window.fsAttributes && window.fsAttributes.cmssort
+          && typeof window.fsAttributes.cmssort.init === 'function') {
+        window.fsAttributes.cmssort.init();
+      }
+    } catch(e) {}
+  }
   if (Array.isArray(window.fsAttributes)) {
-    if (needsLoad)   window.fsAttributes.push(['cmsload',   function(){}]);
+    if (needsLoad) {
+      /* When cmsload finishes (items rendered), re-init filter + sort
+         on a short delay so they ingest item values from the live DOM. */
+      window.fsAttributes.push(['cmsload', function(){
+        setTimeout(reInitFilterAndSort, 80);
+        setTimeout(reInitFilterAndSort, 600);
+      }]);
+    }
     if (needsFilter) window.fsAttributes.push(['cmsfilter', function(){}]);
     if (needsSort)   window.fsAttributes.push(['cmssort',   function(){}]);
   }
