@@ -1,0 +1,40 @@
+name: AI grader (Pain Ontario ED applicants)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch: {}      # also runnable on demand from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-grader
+  cancel-in-progress: false
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        working-directory: tools
+        run: npm install --no-audit --no-fund --silent
+
+      - name: Run grader
+        working-directory: tools
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SHEET_ID: 1JXly9t0KC-hZiOAerGw9S2F8HKHiBD_6QybaTsZu7zk
+          SHEET_TAB: Applications
+          MODEL: claude-opus-4-7
+          MAX_PER_RUN: "10"
+        run: node ai-grader.mjs
