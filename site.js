@@ -456,11 +456,12 @@ go();
   var urlDark  = 'url("data:image/svg+xml;utf8,' + svgDark  + '")';
   var s = document.createElement('style');
   s.setAttribute('data-po', 'nav-dots-bg-v1');
+  /* Higher specificity than the existing html[data-theme="dark"] .navbar rule */
   s.textContent = [
-    /* Light mode — cream/coral/sage/sky tile on the cream nav */
-    'html nav,html header.po-nav,html .navbar,html .w-nav{background-image:' + urlLight + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important}',
-    /* Dark mode — swap to brighter tile, no blend (true colors) */
-    'html[data-theme="dark"] nav,html[data-theme="dark"] header.po-nav,html[data-theme="dark"] .navbar,html[data-theme="dark"] .w-nav{background-image:' + urlDark + '!important;background-blend-mode:normal!important}'
+    /* Light mode — cream/coral/sage/sky tile on the cream nav. Use html.x for specificity bump (1 attr matches 0,2,1; we add another class to outweigh). */
+    'html body .navbar,html body nav,html body .w-nav,html body header.po-nav{background-image:' + urlLight + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important}',
+    /* Dark mode — brighter tile, beats existing dark-theme radial-gradient */
+    'html[data-theme="dark"] body .navbar,html[data-theme="dark"] body nav,html[data-theme="dark"] body .w-nav,html[data-theme="dark"] body header.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important}'
   ].join('');
   document.head.appendChild(s);
 })();
