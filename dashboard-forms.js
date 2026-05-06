@@ -84,6 +84,8 @@
     ".po-dash .po-error{padding:.8rem 1.2rem;background:rgba(243,184,184,.12);border:1px solid rgba(243,184,184,.4);border-radius:10px;margin:1rem 1.2rem;color:#f3b8b8;font-size:.9rem}",
     ".po-dash[hidden]{display:none}",
     "@media print{body *{visibility:hidden}.po-dash,.po-dash *{visibility:visible}.po-dash{position:absolute;inset:0}}"
+  ,
+    "/*po-light-v1*/" + "html[data-theme='light'] .po-dash{color:#1F2933}html[data-theme='light'] .po-dash .po-head,html[data-theme='light'] .po-dash .po-tabs,html[data-theme='light'] .po-dash .po-toolbar,html[data-theme='light'] .po-dash .po-chart-wrap{border-bottom-color:rgba(31,41,51,.14)}html[data-theme='light'] .po-dash .po-eyebrow,html[data-theme='light'] .po-dash .po-meta,html[data-theme='light'] .po-dash .po-count,html[data-theme='light'] .po-dash .po-empty{color:#5B6E7F}html[data-theme='light'] .po-dash .po-tab{background:rgba(31,41,51,.04);border-color:rgba(31,41,51,.18);color:#1F2933}html[data-theme='light'] .po-dash .po-tab[aria-selected='true']{background:rgba(120,188,156,.20);border-color:rgba(31,107,126,.4);color:#155a6c}html[data-theme='light'] .po-dash .po-search{background:#ffffff;border-color:rgba(31,41,51,.22);color:#1F2933}html[data-theme='light'] .po-dash th,html[data-theme='light'] .po-dash td{border-bottom-color:rgba(31,41,51,.10);color:#1F2933}html[data-theme='light'] .po-dash th{color:#5B6E7F}html[data-theme='light'] .po-dash tr:hover td{background:rgba(31,41,51,.04)}html[data-theme='light'] .po-dash .po-error{background:rgba(220,120,120,.10);border-color:rgba(220,120,120,.4);color:#8a3a3a}"
   ].join("\n");
 
   /* ============================================================
