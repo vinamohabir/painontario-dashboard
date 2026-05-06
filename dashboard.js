@@ -1,3 +1,4 @@
+/*! dashboard.js — last-updated 2026-05-06 manifest-test-noop */
 /*
  * Pain Ontario — Board ED Dashboard
  * Hosted at github.com/vinamohabir/painontario-dashboard
