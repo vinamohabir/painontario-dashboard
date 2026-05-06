@@ -392,9 +392,20 @@ go();
   function bindOnce(){
     if (window.__poCustomFilter) return;
     window.__poCustomFilter = true;
-    document.addEventListener('change', function(e){
-      if (e.target.matches && e.target.matches('.chip input, [fs-cmsfilter-field]')) apply();
-    }, true);
+    /* Webflow's .w-checkbox-input intercepts change events, so listen for
+       both click + change on multiple plausible targets, then debounce
+       apply() so duplicate firings don't matter. */
+    function onChip(e){
+      var t = e.target;
+      if (!t || !t.matches) return;
+      if (t.matches('.chip input, .chip label, .chip, [fs-cmsfilter-field], .w-checkbox-input, .w-form-formradioinput')
+          || (t.closest && t.closest('.chip'))) {
+        clearTimeout(window.__poFilterT2);
+        window.__poFilterT2 = setTimeout(apply, 50);
+      }
+    }
+    document.addEventListener('change', onChip, true);
+    document.addEventListener('click', onChip, true);
     var search = document.querySelector('#res-search, input[name="res-search"], input[fs-cmsfilter-field="name,source"]');
     if (search) {
       search.addEventListener('input', function(){
