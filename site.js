@@ -257,21 +257,40 @@ go();
 
 /* --- v2 additions: chip-strip restore + kicker-as-link + finsweet cmsfilter/cmssort loader --- */
 
-/* Block 0: Finsweet cmsfilter + cmssort loader for /resource-library/* and any page with fs-cmsfilter attributes. cmsload (pagination) was already loaded by an App-applied script; cmsfilter and cmssort were lost in the consolidation. */
+/* Block 0: Finsweet cmsfilter + cmssort loader. cmsload (pagination) was already loaded by an App-applied script. cmsfilter loaded too late for cmsload's auto-init, so we explicitly re-init after the script lands. */
 (function(){
   if (window.__poFinsweetLoaded) return;
   var needsFilter = !!document.querySelector('[fs-cmsfilter-element], [fs-cmsfilter-field]');
   var needsSort   = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
   if (!needsFilter && !needsSort) return;
   window.__poFinsweetLoaded = true;
-  function load(src){
-    if (document.querySelector('script[src="' + src + '"]')) return;
+  window.fsAttributes = window.fsAttributes || [];
+
+  function load(src, onload){
+    if (document.querySelector('script[src="' + src + '"]')) { onload && onload(); return; }
     var s = document.createElement('script');
     s.src = src; s.async = true; s.defer = true;
+    s.onload = onload || null;
     document.head.appendChild(s);
   }
-  if (needsFilter) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
-  if (needsSort)   load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
+
+  function reInit(name){
+    var mod = window.fsAttributes && window.fsAttributes[name];
+    if (!mod) return;
+    try { mod.destroy && mod.destroy(); } catch(e){}
+    try { mod.init && mod.init(); } catch(e){}
+  }
+
+  if (needsFilter) {
+    load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js', function(){
+      [50, 300, 900, 2000].forEach(function(d){ setTimeout(function(){ reInit('cmsfilter'); }, d); });
+    });
+  }
+  if (needsSort) {
+    load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js', function(){
+      [50, 300, 900, 2000].forEach(function(d){ setTimeout(function(){ reInit('cmssort'); }, d); });
+    });
+  }
 })();
 
 
