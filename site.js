@@ -456,12 +456,13 @@ go();
   var urlDark  = 'url("data:image/svg+xml;utf8,' + svgDark  + '")';
   var s = document.createElement('style');
   s.setAttribute('data-po', 'nav-dots-bg-v1');
-  /* Higher specificity than the existing html[data-theme="dark"] .navbar rule */
+  /* Specificity bumped to .navbar.w-nav (both classes on same element) so we
+     decisively beat the existing html[data-theme="dark"] .w-nav radial-gradient. */
   s.textContent = [
-    /* Light mode — cream/coral/sage/sky tile on the cream nav. Use html.x for specificity bump (1 attr matches 0,2,1; we add another class to outweigh). */
-    'html body .navbar,html body nav,html body .w-nav,html body header.po-nav{background-image:' + urlLight + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important}',
-    /* Dark mode — brighter tile, beats existing dark-theme radial-gradient */
-    'html[data-theme="dark"] body .navbar,html[data-theme="dark"] body nav,html[data-theme="dark"] body .w-nav,html[data-theme="dark"] body header.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important}'
+    /* Light mode */
+    'html body .navbar.w-nav,html body nav.w-nav,html body header.po-nav.po-nav{background-image:' + urlLight + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#f5efe2!important}',
+    /* Dark mode — beats radial-gradient stack with .navbar.w-nav (0,3,2 specificity) */
+    'html[data-theme="dark"] body .navbar.w-nav,html[data-theme="dark"] body nav.w-nav,html[data-theme="dark"] body header.po-nav.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#0e1320!important}'
   ].join('');
   document.head.appendChild(s);
 })();
