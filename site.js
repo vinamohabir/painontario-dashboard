@@ -2321,3 +2321,123 @@ label[for="res-sort"] {
   })();
 })();
 
+/* ============================================================
+   FORM-TERRITORY RESTORE BUNDLE (2026-05-05 v1)
+   Restores 8 form-territory scripts that were deleted along with
+   the legacy App-applied scripts. Each is path-gated and idempotent.
+   Sourced from cdn.prod.website-files.com archive — these are the
+   exact bytes that were running pre-cutover.
+
+   Restored:
+   - pojobsfilepickv7b      — file upload UI for resume + cover letter
+   - pojobssubmitv7         — form submit handler
+   - po_ed_jobs_prescreener_v7 — Ontario residency / age screener
+   - po_ed_jobs_form_styles_v2 — form widget styling
+   - pojobsmobilefixv1      — mobile-specific job-form fixes
+   - pojobsrolecarddedup    — dedup helper for role card injection
+   - contactwebhookv4       — Make.com webhook for /contact form
+   - pocontactpolishv1      — /contact form polish
+
+   Plus a separate fix for the recursive .po-jbs-rc nesting bug
+   (idempotency check on h3.dataset.poRc fails because h3 is removed,
+   so subsequent runs find the new h3 inside the wrapper and re-wrap).
+   ============================================================ */
+
+/* === Recursive role-card nesting fix === */
+(function () {
+  if (!/^\/about\/jobs(\/|$)/i.test(location.pathname)) return;
+  if (document.querySelector('style[data-po="rolecard-recursion-fix-v1"]')) return;
+  var marker = document.createElement('style');
+  marker.setAttribute('data-po', 'rolecard-recursion-fix-v1');
+  marker.textContent = '/* rolecard-recursion-fix-v1 active */';
+  document.head.appendChild(marker);
+
+  /* Body-level marker so the role-card builder cannot rerun once it
+     has produced its single .po-jbs-rc wrapper. The original guard
+     used h3.dataset.poRc but h3 gets removed, so the next tick finds
+     a fresh h3 inside the wrapper and re-wraps. */
+  function lock() {
+    if (document.body.dataset.poJbsRcBuilt === '1') return;
+    var rcs = document.querySelectorAll('.po-jbs-rc');
+    if (rcs.length === 0) return;
+    /* If multiple .po-jbs-rc already exist (recursion already happened),
+       keep the OUTERMOST one and remove the rest's wrappers — preserve
+       only the innermost content by replacing with a clean rebuild. */
+    if (rcs.length > 1) {
+      /* Find the deepest .po-jbs-rc — its content is the canonical one. */
+      var deepest = null, depth = -1;
+      Array.prototype.forEach.call(rcs, function (rc) {
+        var d = 0;
+        var p = rc.parentElement;
+        while (p) { if (p.classList && p.classList.contains('po-jbs-rc')) d++; p = p.parentElement; }
+        if (d > depth) { depth = d; deepest = rc; }
+      });
+      var topMost = rcs[0];
+      if (deepest && topMost && deepest !== topMost) {
+        topMost.innerHTML = deepest.innerHTML;
+      }
+      /* Remove all but the topmost. */
+      Array.prototype.forEach.call(rcs, function (rc) {
+        if (rc !== topMost && rc.parentNode) rc.parentNode.removeChild(rc);
+      });
+    }
+    document.body.dataset.poJbsRcBuilt = '1';
+  }
+  lock();
+  /* Catch later builder ticks */
+  [200, 500, 1200, 3500].forEach(function (ms) { setTimeout(lock, ms); });
+
+  if (window.MutationObserver) {
+    var t = null;
+    var mo = new MutationObserver(function () {
+      if (t) return;
+      t = setTimeout(function () { t = null; lock(); }, 80);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+
+/* === pojobsfilepickv7b (file upload UI) === */
+!function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;function R(){if(window.__POjobsFP7)return;window.__POjobsFP7=!0;var W=document.querySelector('[data-po-form="ed-application"]');if(!W)return;var F=W.querySelector("form");if(!F)return;var P="display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;background:rgba(31,41,51,.03);border:1.5px dashed rgba(31,41,51,.28);border-radius:8px;padding:.75rem .9rem;margin:.2rem 0",B="display:inline-flex;align-items:center;border:1px solid #1F6B7E;background:#1F6B7E;color:#fff;padding:.5rem .9rem;border-radius:6px;font-weight:600;font-size:.92rem;cursor:pointer",I="font-size:.92rem;opacity:.75;flex:1;min-width:120px;overflow-wrap:anywhere";Array.prototype.forEach.call(F.querySelectorAll(".w-file-upload"),function(w){var i=w.querySelector('input[type="file"]');if(!i)return;var c=i.cloneNode();c.style.display="none";c.id=i.id;c.removeAttribute("aria-hidden");c.removeAttribute("tabindex");c.classList.remove("w-file-upload-input");var p=document.createElement("div");p.style.cssText=P;var b=document.createElement("button");b.type="button";b.textContent="Choose file";b.style.cssText=B;b.addEventListener("click",function(){c.click()});var n=document.createElement("span");n.style.cssText=I;n.textContent="No file chosen - max 10 MB";c.addEventListener("change",function(){if(c.files&&c.files[0]){var f=c.files[0],m=(f.size/1048576).toFixed(2);if(f.size>10485760){n.textContent="File too large ("+m+" MB) - max 10 MB";n.style.color="#C76E8A";c.value="";return}n.textContent=f.name+" - "+m+" MB (click Choose file to replace)";n.style.color=""}else n.textContent="No file chosen - max 10 MB"});p.appendChild(b);p.appendChild(n);p.appendChild(c);w.parentNode.replaceChild(p,w)});console.log("[PO-jobs FP v7b] pickers rebuilt")}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",R):R()}();
+
+/* === pojobssubmitv7 (form submit handler with file upload) === */
+!function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;var W="https://hook.eu1.make.com/3spfohh09gkehuwdguh3oeme7opn99d9";function R(){if(window.__POjobsSB7)return;window.__POjobsSB7=!0;var W1=document.querySelector('[data-po-form="ed-application"]');if(!W1)return;var F=W1.querySelector("form");if(!F)return;var D=W1.querySelector(".w-form-done"),X=W1.querySelector(".w-form-fail");F.addEventListener("submit",function(e){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();var s=F.querySelector('[data-po-submit], input[type="submit"], button[type="submit"]'),o=s?(s.value||s.textContent):"";if(s){s.disabled=!0;if("value"in s)s.value="Sending...";else s.textContent="Sending..."}var fd=new FormData(F);fd.append("source","painontario.ca/about/jobs");fd.append("submittedAt",new Date().toISOString());fetch(W,{method:"POST",body:fd}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);F.style.display="none";if(D){D.style.display="block";D.scrollIntoView({behavior:"smooth",block:"nearest"})}else alert("Application sent. Thank you.")}).catch(function(err){console.error("[PO-jobs] submit failed",err);if(X){X.style.display="block";X.scrollIntoView({behavior:"smooth",block:"nearest"})}if(s){s.disabled=!1;if("value"in s)s.value=o||"Submit";else s.textContent=o||"Submit"}});return!1},!0);console.log("[PO-jobs SB v7] submit hijack active")}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",R):R()}();
+
+/* === po_ed_jobs_prescreener_v7 === */
+(function(){function init(){if(window.__POscreenerV7)return;window.__POscreenerV7=true;var form=document.querySelector('[data-po-form="ed-application"]');if(!form)return;var fi=form.querySelector('form')||form;Array.prototype.forEach.call(document.querySelectorAll('[data-po-screener-end]'),function(el){el.remove();});Array.prototype.forEach.call(form.querySelectorAll('[data-po-phase]'),function(w){while(w.firstChild){if(w.parentElement===fi||w.parentElement===form){w.parentElement.insertBefore(w.firstChild,w);}else{w.remove();break;}}w.remove();});var ont=fi.querySelector('select[data-name="Ontario-resident"]');var submit=fi.querySelector('[data-po-submit]');if(!ont||!submit)return;var oc=ont.cloneNode(true);ont.parentNode.replaceChild(oc,ont);ont=oc;var lab=null,p=ont.previousElementSibling;while(p){if(p.tagName==='LABEL'){lab=p;break;}p=p.previousElementSibling;}var p1=document.createElement('div');p1.setAttribute('data-po-phase','1');p1.style.cssText='background:rgba(107,163,199,.06);border:1px solid rgba(107,163,199,.32);border-left:4px solid #6BA3C7;border-radius:10px;padding:1.1rem 1.2rem 1.3rem;margin:.5rem 0 1.25rem;display:grid;gap:.55rem;grid-column:1/-1';p1.innerHTML='<div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:600;opacity:.7">Step 1 of 2 — eligibility</div>';fi.insertBefore(p1,fi.firstElementChild);if(lab)p1.appendChild(lab);p1.appendChild(ont);var cb=document.createElement('button');cb.type='button';cb.textContent='Continue →';cb.disabled=true;cb.style.cssText='justify-self:start;margin-top:.4rem;background:#1A1A1A;color:#F2EBDD;border:0;border-radius:999px;padding:.6rem 1.2rem;font-weight:600;cursor:not-allowed;opacity:.55';p1.appendChild(cb);var h=document.createElement('div');h.style.cssText='font-size:.85rem;opacity:.7';h.textContent='Pick an answer to continue.';p1.appendChild(h);var p2=document.createElement('div');p2.setAttribute('data-po-phase','2');p2.style.cssText='display:none;grid-column:1/-1';fi.appendChild(p2);var mq=[];Array.prototype.forEach.call(fi.children,function(el){if(el!==p1&&el!==p2)mq.push(el);});mq.forEach(function(el){p2.appendChild(el);});var ph=document.createElement('div');ph.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:.4rem 0 .85rem';var pt=document.createElement('div');pt.style.cssText='font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:600;opacity:.7';pt.textContent='Step 2 of 2 — application';var bk=document.createElement('button');bk.type='button';bk.textContent='← Back to step 1';bk.style.cssText='background:transparent;border:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline;font-size:.85rem;opacity:.75;padding:0';ph.appendChild(pt);ph.appendChild(bk);p2.insertBefore(ph,p2.firstChild);var card=document.createElement('div');card.setAttribute('data-po-screener-end','1');card.setAttribute('role','status');card.style.cssText='display:none;background:rgba(199,110,138,.08);border:1px solid rgba(199,110,138,.4);border-left:4px solid #C76E8A;border-radius:10px;padding:1.2rem 1.4rem;margin-top:1rem;font-size:.98rem;line-height:1.55';card.innerHTML='<strong style="display:block;margin-bottom:.4rem;font-size:1.05rem">Thanks for your interest.</strong><span>This role requires current Ontario residency, so we can’t proceed with this application. We’ll keep your contact on file for future opportunities you may be eligible for.</span>';var eb=document.createElement('button');eb.type='button';eb.textContent='← Back to step 1';eb.style.cssText='margin-top:.85rem;background:transparent;border:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline;font-size:.9rem;opacity:.85;padding:0';card.appendChild(eb);form.appendChild(card);function lt(){var o=ont.options[ont.selectedIndex];return o?(o.text||o.label||'').trim():'';}function g1(){ont.selectedIndex=0;p1.style.display='';p2.style.display='none';card.style.display='none';cb.disabled=true;cb.style.opacity='.55';cb.style.cursor='not-allowed';h.style.display='';try{ont.focus();}catch(e){}}function g2(){p1.style.display='none';card.style.display='none';p2.style.display='';try{p2.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}}function ge(){p1.style.display='none';p2.style.display='none';card.style.display='block';try{card.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(e){}}function oc2(){var l=lt().toLowerCase();var u=!l||/^select/i.test(l);cb.disabled=u;cb.style.opacity=u?'.55':'1';cb.style.cursor=u?'not-allowed':'pointer';h.style.display=u?'':'none';}function ok(){var l=lt().toLowerCase();if(!l||/^select/i.test(l))return;if(l==='no')return ge();return g2();}ont.addEventListener('change',oc2);cb.addEventListener('click',ok);bk.addEventListener('click',g1);eb.addEventListener('click',g1);oc2();console.log('[PO-prescreen v7] active');}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
+
+/* === po_ed_jobs_form_styles_v2 === */
+(function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;var c='[data-po-form="ed-application"]{display:block;max-width:640px;margin-top:1.5rem}[data-po-form="ed-application"] form{display:grid;grid-template-columns:1fr 1fr;gap:.65rem 1rem}[data-po-form="ed-application"] label{grid-column:1 / -1;font-weight:600;font-size:.92rem;margin:.85rem 0 .15rem;color:inherit}[data-po-form="ed-application"] label[for="First-Name"],[data-po-form="ed-application"] input#First-Name,[data-po-form="ed-application"] label[for="Last-Name"],[data-po-form="ed-application"] input#Last-Name{grid-column:auto}[data-po-form="ed-application"] .w-input,[data-po-form="ed-application"] .w-select,[data-po-form="ed-application"] textarea{grid-column:1 / -1;width:100%;border:1px solid rgba(31,41,51,.22);border-radius:8px;padding:.65rem .85rem;font:inherit;background:rgba(255,255,255,.5);color:inherit;transition:border-color .15s,box-shadow .15s}[data-po-form="ed-application"] textarea{min-height:120px;resize:vertical}[data-po-form="ed-application"] .w-input:focus,[data-po-form="ed-application"] .w-select:focus,[data-po-form="ed-application"] textarea:focus{border-color:#1F6B7E;box-shadow:0 0 0 3px rgba(31,107,126,.18);outline:none}[data-po-form="ed-application"] .w-file-upload{grid-column:1 / -1;display:block;background:rgba(31,41,51,.03);border:1.5px dashed rgba(31,41,51,.28);border-radius:8px;padding:.95rem 1.05rem;margin:.2rem 0}[data-po-form="ed-application"] .w-file-upload-default{display:flex;align-items:center;gap:.85rem;flex-wrap:wrap}[data-po-form="ed-application"] .w-file-upload-label{display:inline-flex;align-items:center;gap:.4rem;border:1px solid #1F6B7E;background:#1F6B7E;color:#fff;padding:.5rem .9rem;border-radius:6px;font-size:.92rem;font-weight:500;cursor:pointer;transition:background .15s}[data-po-form="ed-application"] .w-file-upload-label:hover{background:#17576A}[data-po-form="ed-application"] .w-file-upload-label .w-icon-file-upload-icon{filter:invert(1)}[data-po-form="ed-application"] .w-file-upload-info{font-size:.82rem;opacity:.7;color:inherit}[data-po-form="ed-application"] .w-file-upload-success{display:flex;align-items:center;gap:.5rem;background:rgba(92,206,89,.15);padding:.4rem .65rem;border-radius:6px;margin-top:.5rem}[data-po-form="ed-application"] [data-po-residency-note]{grid-column:1 / -1;background:rgba(199,110,138,.08);border:1px solid rgba(199,110,138,.35);border-left:3px solid #C76E8A;border-radius:6px;padding:.7rem .9rem;font-size:.92rem;color:inherit;margin:.4rem 0 .2rem}[data-po-form="ed-application"] [data-po-submit]{grid-column:1 / -1;justify-self:start;margin-top:1rem;background:#1F2933;color:#FBFAF3;border:0;border-radius:999px;padding:.8rem 1.6rem;font-weight:600;font-size:.95rem;cursor:pointer;transition:background .15s,opacity .15s}[data-po-form="ed-application"] [data-po-submit]:hover{background:#000}[data-po-form="ed-application"] [data-po-submit][disabled],[data-po-form="ed-application"] [data-po-submit].po-submit-blocked{opacity:.45;cursor:not-allowed;background:#1F2933}@media(max-width:640px){[data-po-form="ed-application"] form{grid-template-columns:1fr}}';var s=document.createElement('style');s.textContent=c;document.head.appendChild(s);})();
+
+/* === pojobsmobilefixv1 === */
+!function(){
+if(!/\/about\/jobs\/?$/i.test(location.pathname))return;
+var css=[
+'.po-jbs-pr li::before{background:#1F6B7E!important;color:#fff!important;border:none!important;opacity:1!important;line-height:36px!important}',
+'.po-jbs-pr li{opacity:1!important}',
+'html[data-theme="dark"] .po-jbs-pr li::before{background:#b6d6c8!important;color:#0e1320!important;border:none!important}',
+'.signpost:empty,.signpost.po-jbs-empty{display:none!important}',
+'@media(max-width:767px){.po-jbs-st{bottom:9.5rem!important}.po-fab-stack{bottom:1.25rem!important}}',
+'@media(min-width:768px){.po-jbs-st{bottom:1.5rem!important}}'
+].join('');
+var s=document.createElement('style');s.setAttribute('data-po','jobs-mfx-v1');s.textContent=css;document.head.appendChild(s);
+function sweep(){
+  var nodes=document.querySelectorAll('.signpost');
+  nodes.forEach(function(n){
+    var t=(n.textContent||'').trim();
+    var hasMedia=n.querySelector('img,svg,video,iframe,a,button');
+    if(!t&&!hasMedia)n.classList.add('po-jbs-empty');
+  });
+}
+sweep();
+[200,600,1500,3000,6000].forEach(function(t){setTimeout(sweep,t);});
+}();
+
+/* === pojobsrolecarddedup === */
+!function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;function fix(){var h2=[...document.querySelectorAll("h2")].find(function(h){return /Currently hiring/i.test(h.textContent)});if(!h2)return;var cs=document.querySelectorAll(".po-jbs-rc");if(!cs.length)return;cs.forEach(function(c){c.remove()});var n=document.createElement("div");n.className="po-jbs-rc";n.innerHTML='<p class="eb">Open role</p><h3 data-po-rc="1">Founding Executive Director</h3><p>A foundational leadership role to establish governance, secure sustainable funding, and build provincial partnerships for chronic pain care.</p><p>Full posting below. Questions: <a href="mailto:info@painontario.ca">info@painontario.ca</a>.</p>';h2.parentElement.insertBefore(n,h2.nextSibling);console.log("[PO-jobs RC dedup] reset to single card")}fix();[100,500,1000,2000,3500,5000].forEach(function(t){setTimeout(fix,t)})}();
+
+/* === contactwebhookv4 === */
+!function(){if(!/^\/contact\/?$/i.test(location.pathname))return;var H="https://hook.eu1.make.com/r5zlpjipart2yozo6sikm93iq2w2myi2",T=["","General question or inquiry","Accessibility issue","Feature suggestion","A resource we should add","Media or partnership","Volunteering or contributing","Something else"],q=document.querySelector.bind(document);function st(){var s=q("#topic");if(!s||s.dataset.poI)return;s.dataset.poI="1";s.setAttribute("name","Topic");s.innerHTML="";T.forEach(function(v){var p=document.createElement("option");p.value=v;p.textContent=v||"Select one…";s.appendChild(p)})}function ss(f,s){var w=f.closest(".w-form");if(!w)return;var d=w.querySelector(".w-form-done"),x=w.querySelector(".w-form-fail");"done"===s?(f.style.display="none",d&&(d.style.display="block"),x&&(x.style.display="none")):(x&&(x.style.display="block"),d&&(d.style.display="none"))}function as(){var f=q('form[data-name="Contact"]');if(!f||f.dataset.poS)return;f.dataset.poS="1";f.addEventListener("submit",function(e){e.preventDefault();e.stopImmediatePropagation();var b=f.querySelector('input[type=submit],button[type=submit]'),v=b?b.value:null;b&&(b.value=b.getAttribute("data-wait")||"Please wait…",b.disabled=!0);var V=function(s){return(f.querySelector(s)||{}).value||""};fetch(H,{method:"POST",mode:"cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({payload:{name:"Contact",submittedAt:new Date().toISOString(),pageUrl:location.href,data:{"First-Name":V("#fn"),"Last-Name":V("#ln"),Email:V("#em"),Role:V("#role"),Topic:V("#topic"),Message:V("#msg")}}})}).then(function(r){if(!r.ok)throw 0;ss(f,"done");try{f.reset()}catch(_){}}).catch(function(){ss(f,"fail");b&&(b.value=v||"Send message",b.disabled=!1)})},!0)}function tk(){st();as()}tk();new MutationObserver(tk).observe(document.body,{childList:!0,subtree:!0})}();
+
+/* === pocontactpolishv1 === */
+(function(){if(!/^\/contact\/?$/i.test(location.pathname))return;document.body.setAttribute('data-pocontact','');var s=document.createElement('style');s.textContent='@media(min-width:992px){body[data-pocontact] .div-block-21.wrap{max-width:960px!important;width:auto!important;margin-left:auto!important;margin-right:auto!important}body[data-pocontact] .w-form:has(form[data-name="Contact"]){max-width:none}}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done,body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{border-radius:14px;padding:1.25rem 1.4rem;margin-top:1rem;line-height:1.5}body[data-pocontact] form[data-name="Contact"] ~ .w-form-done{background:rgba(120,188,156,0.16);border:1px solid rgba(120,188,156,0.45);color:var(--brand-cream,#f5efe2)}body[data-pocontact] form[data-name="Contact"] ~ .w-form-fail{background:rgba(220,120,120,0.16);border:1px solid rgba(220,120,120,0.45);color:var(--brand-cream,#f5efe2)}';document.head.appendChild(s);var DONE="Thanks — message received. We'll be in touch when we can. If it's urgent, please also email info@painontario.ca.";var FAIL="That didn't send. Please try again, or email us directly at info@painontario.ca.";function p(){var cf=document.querySelector('form[data-name="Contact"]');if(!cf)return;var w=cf.closest('.w-form');if(!w)return;var d=w.querySelector('.w-form-done>div,.w-form-done'),f=w.querySelector('.w-form-fail>div,.w-form-fail');if(d&&d.textContent.trim()!==DONE)d.textContent=DONE;if(f&&f.textContent.trim()!==FAIL)f.textContent=FAIL}p();new MutationObserver(p).observe(document.body,{childList:true,subtree:true});})();
