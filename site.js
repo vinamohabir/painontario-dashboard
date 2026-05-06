@@ -255,7 +255,25 @@ go();
 /* --- footer block 15 --- */
 !function(){if(!/\/about\/jobs\/?$/i.test(location.pathname))return;var p=function(){var e=document.querySelector('.po-jbs-eq');if(!e||e.dataset.v==='2')return!1;e.dataset.v='2';e.innerHTML='<h3>Who we want to hear from</h3><p>We\'re especially looking for applications from people with lived and living experience of chronic pain, Indigenous Peoples, Black and other racialized candidates, 2SLGBTQ+ candidates, Disabled candidates, and people from working-class and rural communities.</p><p>If you need an accommodation at any stage, write to <a href="mailto:info@painontario.ca">info@painontario.ca</a> and we\'ll arrange it. You don\'t need to disclose a reason.</p>';return!0};p();[200,500,1000,2000,4000].forEach(function(d){setTimeout(p,d)});var s=document.createElement('style');s.setAttribute('data-po','jobsequityandpillrestylev2');s.textContent='.po-jbs-st{background:#fff!important;color:#1F6B7E!important;border:1.5px solid #1F6B7E!important;font-weight:500!important;padding:.55rem 1.1rem!important;font-size:.95rem!important;border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,0.08)!important;display:inline-flex!important;align-items:center!important;gap:.4rem!important;text-decoration:none!important}.po-jbs-st:hover{background:#1F6B7E!important;color:#fff!important}.po-jbs-st b,.po-jbs-st span,.po-jbs-st small{background:transparent!important;color:inherit!important;opacity:.7!important;font-size:.78em!important;font-weight:400!important;padding:0!important;border-radius:0!important;letter-spacing:normal!important}html[data-theme="dark"] .po-jbs-st{background:rgba(31,107,126,0.15)!important;color:#f5ecd2!important;border-color:#f5ecd2!important}html[data-theme="dark"] .po-jbs-st:hover{background:#f5ecd2!important;color:#171d2c!important}html[data-theme="dark"] .po-jbs-st *{color:inherit!important}';document.head.appendChild(s)}();
 
-/* --- v2 additions: chip-strip restore + kicker-as-link --- */
+/* --- v2 additions: chip-strip restore + kicker-as-link + finsweet cmsfilter/cmssort loader --- */
+
+/* Block 0: Finsweet cmsfilter + cmssort loader for /resource-library/* and any page with fs-cmsfilter attributes. cmsload (pagination) was already loaded by an App-applied script; cmsfilter and cmssort were lost in the consolidation. */
+(function(){
+  if (window.__poFinsweetLoaded) return;
+  var needsFilter = !!document.querySelector('[fs-cmsfilter-element], [fs-cmsfilter-field]');
+  var needsSort   = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
+  if (!needsFilter && !needsSort) return;
+  window.__poFinsweetLoaded = true;
+  function load(src){
+    if (document.querySelector('script[src="' + src + '"]')) return;
+    var s = document.createElement('script');
+    s.src = src; s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }
+  if (needsFilter) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
+  if (needsSort)   load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
+})();
+
 
 /* Block A: full role-card CSS restore (chip strip + role card + equity band + hiring process timeline + 2-col responsibilities/profile with checkmark bullets) */
 (function(){
