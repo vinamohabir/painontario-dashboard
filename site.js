@@ -2703,3 +2703,54 @@ sweep();
     setTimeout(labelAudienceTiles, 1500);
   }
 }();
+
+
+/* === OG meta polish (2026-05-06)
+   News detail pages serve <meta property="og:type" content="website"> by
+   Webflow default. Override to "article" so LinkedIn/FB/Slack/Twitter
+   render the rich news preview correctly. JS-injected — most modern
+   social crawlers (LI, FB, Slack, X) execute JS before scraping OG. */
+!function(){
+  /* News detail URL shape: /news/<slug> per Webflow CMS template path */
+  if (!/^\/news\/[a-z0-9-]+/.test(location.pathname)) return;
+  if (document.querySelector('meta[property="og:type"][data-po="news-article"]')) return;
+
+  function setOg(prop, content){
+    var existing = document.querySelector('meta[property="' + prop + '"]');
+    if (existing) {
+      existing.setAttribute('content', content);
+      existing.setAttribute('data-po', 'news-article');
+    } else {
+      var m = document.createElement('meta');
+      m.setAttribute('property', prop);
+      m.setAttribute('content', content);
+      m.setAttribute('data-po', 'news-article');
+      document.head.appendChild(m);
+    }
+  }
+  setOg('og:type', 'article');
+
+  /* Add NewsArticle JSON-LD if not present (one block, idempotent) */
+  if (!document.querySelector('script[type="application/ld+json"][data-po="news-article-schema"]')) {
+    var titleEl = document.querySelector('h1');
+    var dateEl = document.querySelector('[class*="date"], time');
+    var descMeta = document.querySelector('meta[name="description"]');
+    var imageMeta = document.querySelector('meta[property="og:image"]');
+    var schema = {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "headline": (titleEl ? (titleEl.textContent || '').trim() : document.title).slice(0, 110),
+      "description": descMeta ? descMeta.getAttribute('content') : '',
+      "datePublished": dateEl ? (dateEl.getAttribute('datetime') || (dateEl.textContent || '').trim()) : '',
+      "image": imageMeta ? imageMeta.getAttribute('content') : '',
+      "author": { "@type": "Organization", "name": "Pain Ontario" },
+      "publisher": { "@id": "https://www.painontario.ca/#organization" },
+      "mainEntityOfPage": { "@type": "WebPage", "@id": location.href }
+    };
+    var s = document.createElement('script');
+    s.setAttribute('type', 'application/ld+json');
+    s.setAttribute('data-po', 'news-article-schema');
+    s.textContent = JSON.stringify(schema);
+    document.head.appendChild(s);
+  }
+}();
