@@ -282,69 +282,150 @@ go();
 })();
 
 
-/* Block 0: Finsweet cmsload + cmsfilter + cmssort loader. Loads all needed modules SEQUENTIALLY so they coordinate via cmscore — async loading races and the second-arriving module fails to extend the already-bound list. */
+/* Block 0a: Load Finsweet cmsload + cmssort only.
+   cmsload bypasses Webflow's 100-item CMS list cap (renders all 162 resources).
+   cmssort handles the A-Z / Z-A / Recent / Source dropdown.
+   cmsfilter is INTENTIONALLY NOT loaded — its dynamic-injection coordination is
+   broken (cmsfilter.listInstances stays null, filtersData never populated, chip
+   clicks narrow to 0). Block 0b below replaces it with a custom filter that
+   reads [fs-cmsfilter-field] text content directly off each .w-dyn-item. */
 (function(){
   if (window.__poFinsweetLoaded) return;
-  var needsLoad   = !!document.querySelector('[fs-cmsload-element]');
-  var needsFilter = !!document.querySelector('[fs-cmsfilter-element], [fs-cmsfilter-field]');
-  var needsSort   = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
-  if (!needsLoad && !needsFilter && !needsSort) return;
+  var needsLoad = !!document.querySelector('[fs-cmsload-element]');
+  var needsSort = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
+  if (!needsLoad && !needsSort) return;
   window.__poFinsweetLoaded = true;
-
-  /* Set up the queue BEFORE any Finsweet script loads. The cmsload
-     callback is the critical part: when cmsload finishes rendering
-     items, we explicitly re-init cmsfilter and cmssort so they
-     ingest the now-rendered per-item field values. Without this
-     hook the load-order fix gets the listInstance bound but
-     filtersData stays unpopulated and chip clicks narrow to 0. */
   if (!window.fsAttributes) window.fsAttributes = [];
-  function reInitFilterAndSort(){
-    try {
-      if (window.fsAttributes && window.fsAttributes.cmsfilter
-          && typeof window.fsAttributes.cmsfilter.init === 'function') {
-        window.fsAttributes.cmsfilter.init();
-      }
-    } catch(e) {}
-    try {
-      if (window.fsAttributes && window.fsAttributes.cmssort
-          && typeof window.fsAttributes.cmssort.init === 'function') {
-        window.fsAttributes.cmssort.init();
-      }
-    } catch(e) {}
-  }
-  if (Array.isArray(window.fsAttributes)) {
-    if (needsLoad) {
-      /* When cmsload finishes (items rendered), re-init filter + sort
-         on a short delay so they ingest item values from the live DOM. */
-      window.fsAttributes.push(['cmsload', function(){
-        setTimeout(reInitFilterAndSort, 80);
-        setTimeout(reInitFilterAndSort, 600);
-      }]);
-    }
-    if (needsFilter) window.fsAttributes.push(['cmsfilter', function(){}]);
-    if (needsSort)   window.fsAttributes.push(['cmssort',   function(){}]);
-  }
 
-  /* Sequential script loader — each script's onload fires the next one,
-     so modules arrive in order and coordinate via cmscore. */
-  var queue = [];
-  /* cmsload MUST be first — it creates the list instance in cmscore.listInstances. cmsfilter and cmssort then EXTEND that instance. If they bootstrap before cmsload binds, they have no list to attach to (filtersData stays empty). */
-  if (needsLoad)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
-  if (needsFilter) queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
-  if (needsSort)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
-
-  function next(){
-    var src = queue.shift();
-    if (!src) return;
-    if (document.querySelector('script[src="' + src + '"]')) { next(); return; }
+  function load(src){
+    if (document.querySelector('script[src="' + src + '"]')) return;
     var s = document.createElement('script');
     s.src = src;
-    s.async = false;       /* preserve order */
-    s.onload = next;
-    s.onerror = next;
+    s.async = false;
     document.head.appendChild(s);
   }
-  next();
+  if (needsLoad) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
+  if (needsSort) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
+})();
+
+/* Block 0b: Custom filter for /resource-library — replaces broken Finsweet cmsfilter.
+   Watches chip checkboxes (each has fs-cmsfilter-field=audience|format|age|region
+   plus value=<token>). For each .w-dyn-item, reads its [fs-cmsfilter-field] text
+   content into a values map, then shows/hides items based on which chips are checked.
+   Also handles #res-search free-text search across name/source/audience text. */
+(function(){
+  if (!/\/resource-library/.test(location.pathname)) return;
+  if (window.__poCustomFilter) return;
+
+  var FIELDS = ['audience','format','age','region','source','name'];
+
+  function tokens(text){
+    return String(text || '').toLowerCase().split(/[\s,;|]+/).map(function(t){
+      return t.replace(/[^a-z0-9-]/g, '');
+    }).filter(Boolean);
+  }
+
+  function indexItems(items){
+    Array.prototype.forEach.call(items, function(it){
+      if (it.dataset.poFiltered) return;
+      var values = {};
+      FIELDS.forEach(function(f){
+        values[f] = [];
+        var nodes = it.querySelectorAll('[fs-cmsfilter-field="' + f + '"]');
+        Array.prototype.forEach.call(nodes, function(n){
+          tokens(n.textContent).forEach(function(t){ if (values[f].indexOf(t) === -1) values[f].push(t); });
+        });
+      });
+      it.dataset.poFiltered = '1';
+      it._poFilterValues = values;
+      it._poFilterTextBlob = it.textContent.toLowerCase();
+    });
+  }
+
+  function getActiveFilters(){
+    var state = {};
+    FIELDS.forEach(function(f){ state[f] = []; });
+    var chips = document.querySelectorAll('.chip input[type="checkbox"]:checked, [fs-cmsfilter-field][type="checkbox"]:checked, [fs-cmsfilter-field][type="radio"]:checked');
+    Array.prototype.forEach.call(chips, function(c){
+      var field = c.getAttribute('fs-cmsfilter-field') || c.name;
+      if (!field || FIELDS.indexOf(field) === -1) return;
+      var v = (c.value || '').toLowerCase().trim();
+      if (v && state[field].indexOf(v) === -1) state[field].push(v);
+    });
+    return state;
+  }
+
+  function getSearchText(){
+    var s = document.querySelector('#res-search, input[name="res-search"], input[fs-cmsfilter-field="name,source"]');
+    return s ? (s.value || '').trim().toLowerCase() : '';
+  }
+
+  function apply(){
+    var items = document.querySelectorAll('.w-dyn-item');
+    if (!items.length) return;
+    indexItems(items);
+    var state = getActiveFilters();
+    var q = getSearchText();
+    var visible = 0;
+    Array.prototype.forEach.call(items, function(it){
+      var keep = true;
+      FIELDS.forEach(function(f){
+        if (!keep) return;
+        var sel = state[f];
+        if (!sel.length) return;
+        var have = it._poFilterValues[f] || [];
+        var ok = sel.some(function(s){ return have.indexOf(s) !== -1; });
+        if (!ok) keep = false;
+      });
+      if (keep && q) {
+        keep = it._poFilterTextBlob.indexOf(q) !== -1;
+      }
+      it.style.display = keep ? '' : 'none';
+      if (keep) visible++;
+    });
+    var counter = document.querySelector('#res-count');
+    if (counter) counter.textContent = visible + ' resource' + (visible === 1 ? '' : 's');
+    var empty = document.querySelector('#resources-empty');
+    if (empty) empty.style.display = visible === 0 ? '' : 'none';
+  }
+
+  function bindOnce(){
+    if (window.__poCustomFilter) return;
+    window.__poCustomFilter = true;
+    document.addEventListener('change', function(e){
+      if (e.target.matches && e.target.matches('.chip input, [fs-cmsfilter-field]')) apply();
+    }, true);
+    var search = document.querySelector('#res-search, input[name="res-search"], input[fs-cmsfilter-field="name,source"]');
+    if (search) {
+      search.addEventListener('input', function(){
+        clearTimeout(window.__poFilterT);
+        window.__poFilterT = setTimeout(apply, 120);
+      });
+    }
+    /* Run after cmsload finishes rendering all items */
+    if (!window.fsAttributes) window.fsAttributes = [];
+    if (Array.isArray(window.fsAttributes)) {
+      window.fsAttributes.push(['cmsload', function(){
+        setTimeout(apply, 100);
+        setTimeout(apply, 1200);
+      }]);
+    }
+    /* Belt + braces: re-apply on a few timers in case cmsload callback misses */
+    [800, 2500, 5000].forEach(function(ms){ setTimeout(apply, ms); });
+    /* Also observe DOM for new items appearing (cmsload pagination/render) */
+    var debounce;
+    var mo = new MutationObserver(function(){
+      clearTimeout(debounce);
+      debounce = setTimeout(apply, 200);
+    });
+    var listEl = document.querySelector('[fs-cmsload-element="list"], [fs-cmsfilter-element="list"], .resources-grid');
+    if (listEl) mo.observe(listEl, { childList: true, subtree: false });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindOnce);
+  } else {
+    bindOnce();
+  }
 })();
 
 
