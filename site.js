@@ -464,7 +464,10 @@ go();
     /* Light mode */
     'html body .navbar.w-nav,html body nav.w-nav,html body header.po-nav.po-nav{background-image:' + urlLight + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#f5efe2!important}',
     /* Dark mode — beats radial-gradient stack with .navbar.w-nav (0,3,2 specificity) */
-    'html[data-theme="dark"] body .navbar.w-nav,html[data-theme="dark"] body nav.w-nav,html[data-theme="dark"] body header.po-nav.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#0e1320!important}'
+    'html[data-theme="dark"] body .navbar.w-nav,html[data-theme="dark"] body nav.w-nav,html[data-theme="dark"] body header.po-nav.po-nav{background-image:' + urlDark + '!important;background-repeat:repeat!important;background-size:240px 96px!important;background-position:0 0!important;background-blend-mode:normal!important;background-color:#0e1320!important}',
+    /* Hide the legacy hand-built .po-nav-dots strip — the new SVG tile fills the
+       navbar so this element is redundant and looks like stray dots after Contact. */
+    'html body .po-nav-dots{display:none!important}'
   ].join('');
   document.head.appendChild(s);
 })();
