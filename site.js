@@ -282,40 +282,42 @@ go();
 })();
 
 
-/* Block 0: Finsweet cmsfilter + cmssort loader. Uses the documented fsAttributes queue pattern. The queue MUST be set up before any Finsweet script loads, so this block runs early in site.js and trusts the queue to dispatch when modules arrive. No destroy() — that wipes cmscore.listInstances and breaks ALL Finsweet modules. */
+/* Block 0: Finsweet cmsload + cmsfilter + cmssort loader. Loads all needed modules SEQUENTIALLY so they coordinate via cmscore — async loading races and the second-arriving module fails to extend the already-bound list. */
 (function(){
   if (window.__poFinsweetLoaded) return;
+  var needsLoad   = !!document.querySelector('[fs-cmsload-element]');
   var needsFilter = !!document.querySelector('[fs-cmsfilter-element], [fs-cmsfilter-field]');
   var needsSort   = !!document.querySelector('[fs-cmssort-element], [fs-cmssort-field]');
-  if (!needsFilter && !needsSort) return;
+  if (!needsLoad && !needsFilter && !needsSort) return;
   window.__poFinsweetLoaded = true;
 
-  /* Initialize the queue if it hasn't been already. If it's already an
-     object (Finsweet bootstrap already replaced the array), leave it. */
+  /* Set up the queue BEFORE any Finsweet script loads. */
   if (!window.fsAttributes) window.fsAttributes = [];
-
-  /* Push registration intent. When the cmsfilter/cmssort script lands,
-     it processes the queue and triggers init. This is the supported
-     init mechanism per Finsweet v1 docs. */
   if (Array.isArray(window.fsAttributes)) {
+    if (needsLoad)   window.fsAttributes.push(['cmsload',   function(){}]);
     if (needsFilter) window.fsAttributes.push(['cmsfilter', function(){}]);
     if (needsSort)   window.fsAttributes.push(['cmssort',   function(){}]);
   }
 
-  function load(src){
-    if (document.querySelector('script[src="' + src + '"]')) return;
+  /* Sequential script loader — each script's onload fires the next one,
+     so modules arrive in order and coordinate via cmscore. */
+  var queue = [];
+  if (needsFilter) queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
+  if (needsSort)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
+  if (needsLoad)   queue.push('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
+
+  function next(){
+    var src = queue.shift();
+    if (!src) return;
+    if (document.querySelector('script[src="' + src + '"]')) { next(); return; }
     var s = document.createElement('script');
-    s.src = src; s.async = true; s.defer = true;
+    s.src = src;
+    s.async = false;       /* preserve order */
+    s.onload = next;
+    s.onerror = next;
     document.head.appendChild(s);
   }
-
-  /* Also load cmsload so all three Finsweet modules arrive together
-     and coordinate. Once /resource-library Page Custom Code's inline
-     cmsload <script> is removed, this is the single source of truth. */
-  var needsLoad = !!document.querySelector('[fs-cmsload-element]');
-  if (needsLoad) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsload@1/cmsload.js');
-  if (needsFilter) load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmsfilter@1/cmsfilter.js');
-  if (needsSort)   load('https://cdn.jsdelivr.net/npm/@finsweet/attributes-cmssort@1/cmssort.js');
+  next();
 })();
 
 
