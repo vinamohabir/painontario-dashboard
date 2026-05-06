@@ -1477,8 +1477,9 @@ label[for="res-sort"] {
 !function(){
   if (document.querySelector('style[data-po="themegapfillv1"]')) return;
   var css = [
-    'html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-image:none!important;border-color:var(--po-border)!important}',
-    '@media screen and (max-width:479px){html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-image:none!important}}',
+    /* Dark nav mirrors light-mode character: subtle cream/mint confetti dots, sky-brand 2px accent stripe, soft drop shadow */
+    'html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-image:radial-gradient(circle,rgba(245,236,210,0.05) 1.4px,transparent 1.7px),radial-gradient(circle,rgba(182,214,200,0.06) 1.2px,transparent 1.5px),radial-gradient(circle,rgba(111,194,215,0.05) 1px,transparent 1.3px)!important;background-size:64px 64px,84px 84px,52px 52px!important;background-position:0 0,32px 32px,12px 18px!important;background-repeat:repeat!important;border:0!important;border-bottom:2px solid #6FC2D7!important;box-shadow:0 2px 14px rgba(0,0,0,.35)!important}',
+    '@media screen and (max-width:479px){html[data-theme="dark"] .w-nav,html[data-theme="dark"] nav.w-nav{background-color:var(--po-bg2)!important;background-size:48px 48px,64px 64px,40px 40px!important}}',
     'html[data-theme="dark"] .w-nav .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown-list.w--open,html[data-theme="dark"] .w-nav .w-dropdown[aria-expanded="true"] .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown:hover .w-dropdown-list,html[data-theme="dark"] .w-nav .w-dropdown:focus-within .w-dropdown-list{background:var(--po-bg2)!important;border:1px solid var(--po-border)!important;color:var(--po-fg)!important}',
     'html[data-theme="dark"] .w-nav .w-dropdown-list a,html[data-theme="dark"] .w-nav .w-dropdown-list .w-dropdown-link{color:var(--po-fg)!important}',
     'html[data-theme="dark"] .w-nav .w-dropdown-list a:hover{background-color:var(--po-bg3)!important;color:var(--po-link)!important}',
