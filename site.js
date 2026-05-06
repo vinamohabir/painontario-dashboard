@@ -442,6 +442,41 @@ go();
 })();
 
 
+/* Block 0e: nav hover — visible accessible color shift + underline grow on
+   .nav-link-7 / .w-nav-link / .w-dropdown-link. WCAG AA contrast in both
+   modes; focus-visible state for keyboard; prefers-reduced-motion respected. */
+(function(){
+  if (document.querySelector('style[data-po="nav-hover-v1"]')) return;
+  var s = document.createElement('style');
+  s.setAttribute('data-po', 'nav-hover-v1');
+  s.textContent = [
+    /* Base — establish a relative anchor + smooth transitions */
+    'html .nav-link-7,html .w-nav-link,html .w-dropdown-link{position:relative;transition:color .18s ease,background-color .18s ease!important}',
+
+    /* Light mode hover: sky brand color + underline grows under text */
+    'html .nav-link-7:hover,html .w-nav-link:hover{color:#1F6B7E!important}',
+    'html .nav-link-7::after,html .w-nav-link::after{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;background:currentColor;transform:scaleX(0);transform-origin:center;transition:transform .2s ease;border-radius:2px;pointer-events:none}',
+    'html .nav-link-7:hover::after,html .w-nav-link:hover::after,html .nav-link-7.w--current::after,html .w-nav-link.w--current::after{transform:scaleX(1)}',
+
+    /* Dropdown items get a subtle pill-fill hover (no underline since they sit on a panel) */
+    'html .w-dropdown-link::after{display:none}',
+    'html .w-dropdown-link:hover{color:#1F6B7E!important;background-color:rgba(31,107,126,0.08)!important}',
+
+    /* Dark mode: shift to brighter teal (#9bd6e8) for visible contrast on dark nav */
+    'html[data-theme="dark"] .nav-link-7:hover,html[data-theme="dark"] .w-nav-link:hover{color:#9bd6e8!important}',
+    'html[data-theme="dark"] .w-dropdown-link:hover{color:#c5e7f1!important;background-color:rgba(155,214,232,0.10)!important}',
+
+    /* Focus-visible: 2px brand outline on keyboard nav */
+    'html .nav-link-7:focus-visible,html .w-nav-link:focus-visible,html .w-dropdown-link:focus-visible{outline:2px solid #1F6B7E!important;outline-offset:2px!important;border-radius:6px!important}',
+    'html[data-theme="dark"] .nav-link-7:focus-visible,html[data-theme="dark"] .w-nav-link:focus-visible,html[data-theme="dark"] .w-dropdown-link:focus-visible{outline-color:#9bd6e8!important}',
+
+    /* Reduced-motion: keep color shift, drop the underline grow + transitions */
+    '@media (prefers-reduced-motion: reduce){html .nav-link-7,html .w-nav-link,html .w-dropdown-link,html .nav-link-7::after,html .w-nav-link::after{transition:none!important}html .nav-link-7::after,html .w-nav-link::after{transform:scaleX(1);opacity:.5}html .nav-link-7:hover::after,html .w-nav-link:hover::after{opacity:1}}'
+  ].join('');
+  document.head.appendChild(s);
+})();
+
+
 /* Block 0c: /resource-library/by-audience — append Changemakers tile.
    Mirrors existing .audience-card markup. Idempotent. */
 (function(){
